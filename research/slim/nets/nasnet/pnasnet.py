@@ -24,7 +24,11 @@ from __future__ import print_function
 import copy
 import tensorflow.compat.v1 as tf
 import tf_slim as slim
-from tensorflow.contrib import training as contrib_training
+try:
+  from tensorflow.contrib import training as contrib_training
+except ImportError:
+  # TF 2.0 doesn't ship with contrib.
+  pass
 
 from nets.nasnet import nasnet
 from nets.nasnet import nasnet_utils

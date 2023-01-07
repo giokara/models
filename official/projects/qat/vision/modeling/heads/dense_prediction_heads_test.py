@@ -23,43 +23,17 @@ import tensorflow as tf
 from official.projects.qat.vision.modeling.heads import dense_prediction_heads
 
 
-def get_attribute_heads(att_head_type):
-  if att_head_type == 'regression_head':
-    return [
-        dict(name='depth', type='regression', size=1, prediction_tower_name='')
-    ]
-  elif att_head_type == 'shared_prediction_tower_attribute_heads':
-    return [
-        dict(
-            name='attr_1', type='regression', size=1, prediction_tower_name=''),
-        dict(
-            name='attr_2',
-            type='classification',
-            size=1,
-            prediction_tower_name='tower_1'),
-        dict(
-            name='attr_3',
-            type='regression',
-            size=1,
-            prediction_tower_name='tower_1')
-    ]
-  else:
-    raise ValueError('Undefined attribute type.')
-
-
 class RetinaNetHeadQuantizedTest(parameterized.TestCase, tf.test.TestCase):
 
   @parameterized.parameters(
-      (False, False, False, None),
-      (False, True, False, None),
-      (True, False, True, 'regression_head'),
-      (True, True, True, 'regression_head'),
-      (True, True, True, 'shared_prediction_tower_attribute_heads'),
+      (False, False, False),
+      (False, True, False),
+      (True, False, True),
+      (True, True, True),
   )
-  def test_forward(self, use_separable_conv, use_sync_bn, has_att_heads,
-                   att_head_type):
+  def test_forward(self, use_separable_conv, use_sync_bn, has_att_heads):
     if has_att_heads:
-      attribute_heads = get_attribute_heads(att_head_type)
+      attribute_heads = [dict(name='depth', type='regression', size=1)]
     else:
       attribute_heads = None
 
@@ -115,3 +89,4 @@ class RetinaNetHeadQuantizedTest(parameterized.TestCase, tf.test.TestCase):
         dense_prediction_heads.RetinaNetHead.from_config(config))
     self.assertAllEqual(
         retinanet_head.get_config(), new_retinanet_head.get_config())
+

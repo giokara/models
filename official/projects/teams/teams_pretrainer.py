@@ -161,11 +161,11 @@ class MultiWordSelectionHead(tf.keras.layers.Layer):
     candidate_embeddings = tf.gather(self.embedding_table, flat_candidate_sets)
     candidate_embeddings = tf.reshape(
         candidate_embeddings,
-        tf.concat([tf.shape(candidate_sets), [self.embed_size]], axis=0)
+        tf.concat([tf.shape(input=candidate_sets), [self.embed_size]], axis=0)
     )
     candidate_embeddings.set_shape(
         candidate_sets.shape.as_list() + [self.embed_size])
-    candidate_embeddings = tf.transpose(candidate_embeddings, [0, 1, 3, 2])
+    candidate_embeddings = tf.transpose(a=candidate_embeddings, perm=[0, 1, 3, 2])
 
     # matrix multiplication + squeeze -> (batch_size, num_prediction, k)
     logits = tf.matmul(lm_data, candidate_embeddings)
@@ -380,7 +380,7 @@ class TeamsPretrainer(tf.keras.Model):
     sampled_tokens = tf.stop_gradient(
         models.electra_pretrainer.sample_from_softmax(
             mlm_logits, disallow=None))
-    sampled_tokids = tf.argmax(sampled_tokens, axis=-1, output_type=tf.int32)
+    sampled_tokids = tf.argmax(input=sampled_tokens, axis=-1, output_type=tf.int32)
 
     # Prepares input and label for replaced token detection task.
     updated_input_ids, masked = models.electra_pretrainer.scatter_update(
@@ -455,7 +455,7 @@ def sample_k_from_softmax(logits, k, disallow=None, use_topk=False):
     gumbel_noise = -tf.math.log(-tf.math.log(uniform_noise + 1e-9) + 1e-9)
     logits += gumbel_noise
     for _ in range(k):
-      token_ids = tf.argmax(logits, -1, output_type=tf.int32)
+      token_ids = tf.argmax(input=logits, axis=-1, output_type=tf.int32)
       sampled_tokens_list.append(token_ids)
       logits -= _LOGIT_PENALTY_MULTIPLIER *  tf.one_hot(
           token_ids, depth=vocab_size, dtype=tf.float32)

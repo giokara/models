@@ -24,7 +24,7 @@ import time
 import numpy as np
 import tensorflow as tf
 
-flags = tf.app.flags
+flags = tf.compat.v1.app.flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('master', '', 'Master address.')
@@ -43,25 +43,25 @@ def run_training(train_op,
                  variables_to_restore=None,
                  pretrained_model_dir=None):
   """Sets up and runs training loop."""
-  tf.gfile.MakeDirs(FLAGS.train_dir)
+  tf.io.gfile.makedirs(FLAGS.train_dir)
 
   # Create pretrain Saver
   if pretrained_model_dir:
     assert variables_to_restore
-    tf.logging.info('Will attempt restore from %s: %s', pretrained_model_dir,
+    tf.compat.v1.logging.info('Will attempt restore from %s: %s', pretrained_model_dir,
                     variables_to_restore)
-    saver_for_restore = tf.train.Saver(variables_to_restore)
+    saver_for_restore = tf.compat.v1.train.Saver(variables_to_restore)
 
   # Init ops
   if FLAGS.sync_replicas:
-    local_init_op = tf.get_collection('local_init_op')[0]
-    ready_for_local_init_op = tf.get_collection('ready_for_local_init_op')[0]
+    local_init_op = tf.compat.v1.get_collection('local_init_op')[0]
+    ready_for_local_init_op = tf.compat.v1.get_collection('ready_for_local_init_op')[0]
   else:
-    local_init_op = tf.train.Supervisor.USE_DEFAULT
-    ready_for_local_init_op = tf.train.Supervisor.USE_DEFAULT
+    local_init_op = tf.compat.v1.train.Supervisor.USE_DEFAULT
+    ready_for_local_init_op = tf.compat.v1.train.Supervisor.USE_DEFAULT
 
   is_chief = FLAGS.task == 0
-  sv = tf.train.Supervisor(
+  sv = tf.compat.v1.train.Supervisor(
       logdir=FLAGS.train_dir,
       is_chief=is_chief,
       save_summaries_secs=30,
@@ -73,7 +73,7 @@ def run_training(train_op,
   # Delay starting standard services to allow possible pretrained model restore.
   with sv.managed_session(
       master=FLAGS.master,
-      config=tf.ConfigProto(log_device_placement=FLAGS.log_device_placement),
+      config=tf.compat.v1.ConfigProto(log_device_placement=FLAGS.log_device_placement),
       start_standard_services=False) as sess:
     # Initialization
     if is_chief:
@@ -81,7 +81,7 @@ def run_training(train_op,
         maybe_restore_pretrained_model(sess, saver_for_restore,
                                        pretrained_model_dir)
       if FLAGS.sync_replicas:
-        sess.run(tf.get_collection('chief_init_op')[0])
+        sess.run(tf.compat.v1.get_collection('chief_init_op')[0])
       sv.start_standard_services(sess)
 
     sv.start_queue_runners(sess)
@@ -101,7 +101,7 @@ def maybe_restore_pretrained_model(sess, saver_for_restore, model_dir):
   ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
   checkpoint_exists = ckpt and ckpt.model_checkpoint_path
   if checkpoint_exists:
-    tf.logging.info('Checkpoint exists in FLAGS.train_dir; skipping '
+    tf.compat.v1.logging.info('Checkpoint exists in FLAGS.train_dir; skipping '
                     'pretraining restore')
     return
 
@@ -124,7 +124,7 @@ def train_step(sess, train_op, loss, global_step):
     sec_per_batch = float(duration)
 
     format_str = ('step %d, loss = %.2f (%.1f examples/sec; %.3f ' 'sec/batch)')
-    tf.logging.info(format_str % (global_step_val, loss_val, examples_per_sec,
+    tf.compat.v1.logging.info(format_str % (global_step_val, loss_val, examples_per_sec,
                                   sec_per_batch))
 
   if np.isnan(loss_val):

@@ -134,6 +134,6 @@ class Trainer(object):
 def write_summary(writer, results, global_step):
   for k, v in results:
     if 'f1' in k or 'acc' in k or 'loss' in k:
-      writer.add_summary(tf.Summary(
-          value=[tf.Summary.Value(tag=k, simple_value=v)]), global_step)
+      writer.add_summary(tf.compat.v1.Summary(
+          value=[tf.compat.v1.Summary.Value(tag=k, simple_value=v)]), global_step)
   writer.flush()

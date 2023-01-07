@@ -92,7 +92,7 @@ class VatxtInput(object):
     # LSTM tuple states
     state_names = _get_tuple_state_names(self._num_states, self._state_name)
     return tuple([
-        tf.contrib.rnn.LSTMStateTuple(
+        tf.nn.rnn_cell.LSTMStateTuple(
             self._batch.state(c_name), self._batch.state(h_name))
         for c_name, h_name in state_names
     ])
@@ -167,19 +167,19 @@ def _filenames_for_data_spec(phase, bidir, pretrain, use_seq2seq):
 
 def _read_single_sequence_example(file_list, tokens_shape=None):
   """Reads and parses SequenceExamples from TFRecord-encoded file_list."""
-  tf.logging.info('Constructing TFRecordReader from files: %s', file_list)
-  file_queue = tf.train.string_input_producer(file_list)
-  reader = tf.TFRecordReader()
+  tf.compat.v1.logging.info('Constructing TFRecordReader from files: %s', file_list)
+  file_queue = tf.compat.v1.train.string_input_producer(file_list)
+  reader = tf.compat.v1.TFRecordReader()
   seq_key, serialized_record = reader.read(file_queue)
-  ctx, sequence = tf.parse_single_sequence_example(
+  ctx, sequence = tf.io.parse_single_sequence_example(
       serialized_record,
       sequence_features={
           data_utils.SequenceWrapper.F_TOKEN_ID:
-              tf.FixedLenSequenceFeature(tokens_shape or [], dtype=tf.int64),
+              tf.io.FixedLenSequenceFeature(tokens_shape or [], dtype=tf.int64),
           data_utils.SequenceWrapper.F_LABEL:
-              tf.FixedLenSequenceFeature([], dtype=tf.int64),
+              tf.io.FixedLenSequenceFeature([], dtype=tf.int64),
           data_utils.SequenceWrapper.F_WEIGHT:
-              tf.FixedLenSequenceFeature([], dtype=tf.float32),
+              tf.io.FixedLenSequenceFeature([], dtype=tf.float32),
       })
   return seq_key, ctx, sequence
 
@@ -212,7 +212,7 @@ def _read_and_batch(data_dir,
     ValueError: if file for input specification is not found.
   """
   data_path = os.path.join(data_dir, fname)
-  if not tf.gfile.Exists(data_path):
+  if not tf.io.gfile.exists(data_path):
     raise ValueError('Failed to find file: %s' % data_path)
 
   tokens_shape = [2] if bidir_input else []
@@ -234,7 +234,7 @@ def _read_and_batch(data_dir,
       input_key=seq_key,
       input_sequences=sequence,
       input_context=ctx,
-      input_length=tf.shape(sequence['token_id'])[0],
+      input_length=tf.shape(input=sequence['token_id'])[0],
       initial_states=initial_states,
       num_unroll=unroll_steps,
       batch_size=batch_size,
@@ -275,7 +275,7 @@ def inputs(data_dir=None,
     Instance of VatxtInput (x2 if bidir=True and pretrain=True, i.e. forward and
       reverse).
   """
-  with tf.name_scope('inputs'):
+  with tf.compat.v1.name_scope('inputs'):
     filenames = _filenames_for_data_spec(phase, bidir, pretrain, use_seq2seq)
 
     if bidir and pretrain:

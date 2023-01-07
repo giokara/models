@@ -16,13 +16,17 @@
 
 import tensorflow as tf
 
+from tensorflow.python.keras import keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 from official.modeling import activations
 from official.nlp.modeling.networks import encoder_scaffold
 from official.nlp.modeling.networks import packed_sequence_embedding
 from official.projects.teams import teams_pretrainer
 
 
-class TeamsPretrainerTest(tf.test.TestCase):
+# This decorator runs the test in V1, V2-Eager, and V2-Functional mode. It
+# guarantees forward compatibility of this code for the V2 switchover.
+@keras_parameterized.run_all_keras_modes
+class TeamsPretrainerTest(keras_parameterized.TestCase):
 
   # Build a transformer network to use within the TEAMS trainer.
   def _get_network(self, vocab_size):
@@ -34,7 +38,7 @@ class TeamsPretrainerTest(tf.test.TestCase):
         'hidden_size': hidden_size,
         'embedding_width': hidden_size,
         'max_seq_length': sequence_length,
-        'initializer': tf.keras.initializers.TruncatedNormal(stddev=0.02),
+        'initializer': tf.compat.v1.keras.initializers.TruncatedNormal(stddev=0.02),
         'dropout_rate': 0.1,
     }
     embedding_inst = packed_sequence_embedding.PackedSequenceEmbedding(
@@ -51,7 +55,7 @@ class TeamsPretrainerTest(tf.test.TestCase):
         'attention_dropout_rate':
             0.1,
         'kernel_initializer':
-            tf.keras.initializers.TruncatedNormal(stddev=0.02),
+            tf.compat.v1.keras.initializers.TruncatedNormal(stddev=0.02),
     }
     return encoder_scaffold.EncoderScaffold(
         num_hidden_instances=2,

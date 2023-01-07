@@ -84,7 +84,7 @@ def main(_) -> None:
         weight = var_3d_2plus1d[:, 0]
       if weight.shape[-1] != var_2plus1d.shape[-1]:
         # Transpose any depthwise kernels (conv3d --> depthwise_conv2d)
-        weight = tf.transpose(weight, perm=(0, 1, 3, 2))
+        weight = tf.transpose(a=weight, perm=(0, 1, 3, 2))
       weights.append(weight)
   model_2plus1d.set_weights(weights)
 
@@ -94,7 +94,7 @@ def main(_) -> None:
     logits_2plus1d = model_2plus1d(inputs)
     logits_3d_2plus1d = model_3d_2plus1d(inputs)
 
-    if tf.reduce_mean(logits_2plus1d - logits_3d_2plus1d) > 1e-5:
+    if tf.reduce_mean(input_tensor=logits_2plus1d - logits_3d_2plus1d) > 1e-5:
       raise ValueError('Bad conversion, model outputs do not match.')
 
   save_checkpoint = tf.train.Checkpoint(

@@ -22,14 +22,13 @@ from absl import logging
 import tensorflow as tf
 
 from official.vision.modeling import maskrcnn_model
-from official.vision.ops import box_ops
 
 
 def resize_as(source, size):
 
-  source = tf.transpose(source, (0, 2, 3, 1))
+  source = tf.transpose(a=source, perm=(0, 2, 3, 1))
   source = tf.image.resize(source, (size, size))
-  return tf.transpose(source, (0, 3, 1, 2))
+  return tf.transpose(a=source, perm=(0, 3, 1, 2))
 
 
 class DeepMaskRCNNModel(maskrcnn_model.MaskRCNNModel):
@@ -56,7 +55,6 @@ class DeepMaskRCNNModel(maskrcnn_model.MaskRCNNModel):
                num_scales: Optional[int] = None,
                aspect_ratios: Optional[List[float]] = None,
                anchor_size: Optional[float] = None,
-               outer_boxes_scale: float = 1.0,
                use_gt_boxes_for_masks=False,
                **kwargs):
     """Initializes the Mask R-CNN model.
@@ -88,13 +86,11 @@ class DeepMaskRCNNModel(maskrcnn_model.MaskRCNNModel):
         aspect_ratios=[1.0, 2.0, 0.5] adds three anchors on each scale level.
       anchor_size: A number representing the scale of size of the base anchor to
         the feature stride 2^level.
-      outer_boxes_scale: a float to scale up the bounding boxes to generate
-        more inclusive masks. The scale is expected to be >=1.0.
       use_gt_boxes_for_masks: bool, if set, crop using groundtruth boxes instead
         of proposals for training mask head
       **kwargs: keyword arguments to be passed.
     """
-    super().__init__(
+    super(DeepMaskRCNNModel, self).__init__(
         backbone=backbone,
         decoder=decoder,
         rpn_head=rpn_head,
@@ -113,7 +109,6 @@ class DeepMaskRCNNModel(maskrcnn_model.MaskRCNNModel):
         num_scales=num_scales,
         aspect_ratios=aspect_ratios,
         anchor_size=anchor_size,
-        outer_boxes_scale=outer_boxes_scale,
         **kwargs)
 
     self._config_dict['use_gt_boxes_for_masks'] = use_gt_boxes_for_masks
@@ -125,44 +120,24 @@ class DeepMaskRCNNModel(maskrcnn_model.MaskRCNNModel):
            gt_boxes: Optional[tf.Tensor] = None,
            gt_classes: Optional[tf.Tensor] = None,
            gt_masks: Optional[tf.Tensor] = None,
-           gt_outer_boxes: Optional[tf.Tensor] = None,
            training: Optional[bool] = None) -> Mapping[str, tf.Tensor]:
-    call_box_outputs_kwargs = {
-        'images': images,
-        'image_shape': image_shape,
-        'anchor_boxes': anchor_boxes,
-        'gt_boxes': gt_boxes,
-        'gt_classes': gt_classes,
-        'training': training
-    }
-    if self.outer_boxes_scale > 1.0:
-      call_box_outputs_kwargs['gt_outer_boxes'] = gt_outer_boxes
+
     model_outputs, intermediate_outputs = self._call_box_outputs(
-        **call_box_outputs_kwargs)
+        images=images, image_shape=image_shape, anchor_boxes=anchor_boxes,
+        gt_boxes=gt_boxes, gt_classes=gt_classes, training=training)
     if not self._include_mask:
       return model_outputs
-
-    if self.outer_boxes_scale == 1.0:
-      current_rois = intermediate_outputs['current_rois']
-      matched_gt_boxes = intermediate_outputs['matched_gt_boxes']
-      mask_head_gt_boxes = gt_boxes
-    else:
-      current_rois = box_ops.compute_outer_boxes(
-          intermediate_outputs['current_rois'],
-          tf.expand_dims(image_shape, axis=1), self.outer_boxes_scale)
-      matched_gt_boxes = intermediate_outputs['matched_gt_outer_boxes']
-      mask_head_gt_boxes = gt_outer_boxes
 
     model_mask_outputs = self._call_mask_outputs(
         model_box_outputs=model_outputs,
         features=model_outputs['decoder_features'],
-        current_rois=current_rois,
+        current_rois=intermediate_outputs['current_rois'],
         matched_gt_indices=intermediate_outputs['matched_gt_indices'],
-        matched_gt_boxes=matched_gt_boxes,
+        matched_gt_boxes=intermediate_outputs['matched_gt_boxes'],
         matched_gt_classes=intermediate_outputs['matched_gt_classes'],
         gt_masks=gt_masks,
         gt_classes=gt_classes,
-        gt_boxes=mask_head_gt_boxes,
+        gt_boxes=gt_boxes,
         training=training)
     model_outputs.update(model_mask_outputs)
     return model_outputs
@@ -171,7 +146,7 @@ class DeepMaskRCNNModel(maskrcnn_model.MaskRCNNModel):
     """Predict masks given an image and bounding boxes."""
 
     _, decoder_features = self._get_backbone_and_decoder_features(images)
-    boxes_shape = tf.shape(boxes)
+    boxes_shape = tf.shape(input=boxes)
     batch_size, num_boxes = boxes_shape[0], boxes_shape[1]
     classes = tf.zeros((batch_size, num_boxes), dtype=tf.int32)
 
@@ -219,10 +194,7 @@ class DeepMaskRCNNModel(maskrcnn_model.MaskRCNNModel):
         })
 
     else:
-      if self.outer_boxes_scale == 1.0:
-        rois = model_outputs['detection_boxes']
-      else:
-        rois = model_outputs['detection_outer_boxes']
+      rois = model_outputs['detection_boxes']
       roi_classes = model_outputs['detection_classes']
 
     # Mask RoI align.

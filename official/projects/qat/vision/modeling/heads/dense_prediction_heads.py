@@ -204,12 +204,12 @@ class RetinaNetHeadQuantized(tf.keras.layers.Layer):
         'filters': self._config_dict['num_filters'],
         'kernel_size': 3,
         'padding': 'same',
-        'bias_initializer': tf.zeros_initializer(),
+        'bias_initializer': tf.compat.v1.zeros_initializer(),
         'bias_regularizer': self._config_dict['bias_regularizer'],
     }
     if not self._config_dict['use_separable_conv']:
       conv_kwargs.update({
-          'kernel_initializer': tf.keras.initializers.RandomNormal(
+          'kernel_initializer': tf.compat.v1.keras.initializers.RandomNormal(
               stddev=0.01),
           'kernel_regularizer': self._config_dict['kernel_regularizer'],
       })
@@ -250,12 +250,12 @@ class RetinaNetHeadQuantized(tf.keras.layers.Layer):
             self._config_dict['num_anchors_per_location']),
         'kernel_size': 3,
         'padding': 'same',
-        'bias_initializer': tf.constant_initializer(-np.log((1 - 0.01) / 0.01)),
+        'bias_initializer': tf.compat.v1.constant_initializer(-np.log((1 - 0.01) / 0.01)),
         'bias_regularizer': self._config_dict['bias_regularizer'],
     }
     if not self._config_dict['use_separable_conv']:
       classifier_kwargs.update({
-          'kernel_initializer': tf.keras.initializers.RandomNormal(stddev=1e-5),
+          'kernel_initializer': tf.compat.v1.keras.initializers.RandomNormal(stddev=1e-5),
           'kernel_regularizer': self._config_dict['kernel_regularizer'],
       })
     self._classifier = conv_op(
@@ -280,12 +280,12 @@ class RetinaNetHeadQuantized(tf.keras.layers.Layer):
                     self._config_dict['num_anchors_per_location']),
         'kernel_size': 3,
         'padding': 'same',
-        'bias_initializer': tf.zeros_initializer(),
+        'bias_initializer': tf.compat.v1.zeros_initializer(),
         'bias_regularizer': self._config_dict['bias_regularizer'],
     }
     if not self._config_dict['use_separable_conv']:
       box_regressor_kwargs.update({
-          'kernel_initializer': tf.keras.initializers.RandomNormal(
+          'kernel_initializer': tf.compat.v1.keras.initializers.RandomNormal(
               stddev=1e-5),
           'kernel_regularizer': self._config_dict['kernel_regularizer'],
       })
@@ -325,16 +325,16 @@ class RetinaNetHeadQuantized(tf.keras.layers.Layer):
                 (att_size * self._config_dict['num_anchors_per_location']),
             'kernel_size': 3,
             'padding': 'same',
-            'bias_initializer': tf.zeros_initializer(),
+            'bias_initializer': tf.compat.v1.zeros_initializer(),
             'bias_regularizer': self._config_dict['bias_regularizer'],
         }
         if att_type == 'regression':
           att_predictor_kwargs.update(
-              {'bias_initializer': tf.zeros_initializer()})
+              {'bias_initializer': tf.compat.v1.zeros_initializer()})
         elif att_type == 'classification':
           att_predictor_kwargs.update({
               'bias_initializer':
-                  tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
+                  tf.compat.v1.constant_initializer(-np.log((1 - 0.01) / 0.01))
           })
         else:
           raise ValueError(
@@ -343,7 +343,7 @@ class RetinaNetHeadQuantized(tf.keras.layers.Layer):
         if not self._config_dict['use_separable_conv']:
           att_predictor_kwargs.update({
               'kernel_initializer':
-                  tf.keras.initializers.RandomNormal(stddev=1e-5),
+                  tf.compat.v1.keras.initializers.RandomNormal(stddev=1e-5),
               'kernel_regularizer':
                   self._config_dict['kernel_regularizer'],
           })
@@ -417,31 +417,15 @@ class RetinaNetHeadQuantized(tf.keras.layers.Layer):
 
       # attribute nets.
       if self._config_dict['attribute_heads']:
-        prediction_tower_output = {}
         for att_config in self._config_dict['attribute_heads']:
           att_name = att_config['name']
-
-          def build_prediction_tower(atttribute_name, features, feature_level):
-            x = features
-            for conv, norm in zip(
-                self._att_convs[atttribute_name],
-                self._att_norms[atttribute_name][feature_level]):
-              x = conv(x)
-              x = norm(x)
-              x = self._activation(x)
-            return x
-
-          prediction_tower_name = att_config['prediction_tower_name']
-          if not prediction_tower_name:
-            attributes[att_name][str(level)] = self._att_predictors[att_name](
-                build_prediction_tower(att_name, this_level_features, i))
-          else:
-            if prediction_tower_name not in prediction_tower_output:
-              prediction_tower_output[
-                  prediction_tower_name] = build_prediction_tower(
-                      att_name, this_level_features, i)
-            attributes[att_name][str(level)] = self._att_predictors[att_name](
-                prediction_tower_output[prediction_tower_name])
+          x = this_level_features
+          for conv, norm in zip(self._att_convs[att_name],
+                                self._att_norms[att_name][i]):
+            x = conv(x)
+            x = norm(x)
+            x = self._activation(x)
+          attributes[att_name][str(level)] = self._att_predictors[att_name](x)
 
     return scores, boxes, attributes
 
@@ -451,3 +435,4 @@ class RetinaNetHeadQuantized(tf.keras.layers.Layer):
   @classmethod
   def from_config(cls, config):
     return cls(**config)
+

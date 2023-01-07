@@ -37,7 +37,7 @@ from environments import create_maze_env
 # pylint: enable=unused-import
 
 
-flags = tf.app.flags
+flags = tf.compat.v1.app.flags
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('goal_sample_strategy', 'sample',
@@ -98,13 +98,13 @@ def collect_experience(tf_env, agent, meta_agent, state_preprocess,
          episode_meta_rewards[1:]], 0)
     return tf.group(
         episode_rewards.assign(
-            tf.cond(reset,
-                    lambda: tf.concat([[0.], episode_rewards[:-1]], 0),
-                    lambda: new_episode_rewards)),
+            tf.cond(pred=reset,
+                    true_fn=lambda: tf.concat([[0.], episode_rewards[:-1]], 0),
+                    false_fn=lambda: new_episode_rewards)),
         episode_meta_rewards.assign(
-            tf.cond(reset,
-                    lambda: tf.concat([[0.], episode_meta_rewards[:-1]], 0),
-                    lambda: new_episode_meta_rewards)))
+            tf.cond(pred=reset,
+                    true_fn=lambda: tf.concat([[0.], episode_meta_rewards[:-1]], 0),
+                    false_fn=lambda: new_episode_meta_rewards)))
 
   def no_op_int():
     return tf.constant(0, dtype=tf.int64)
@@ -119,10 +119,10 @@ def collect_experience(tf_env, agent, meta_agent, state_preprocess,
                                            transition_type,
                                            environment_steps, num_episodes)
 
-  increment_step_op = tf.cond(step_cond, increment_step, no_op_int)
-  increment_episode_op = tf.cond(reset_episode_cond, increment_episode,
-                                 no_op_int)
-  increment_reset_op = tf.cond(reset_env_cond, increment_reset, no_op_int)
+  increment_step_op = tf.cond(pred=step_cond, true_fn=increment_step, false_fn=no_op_int)
+  increment_episode_op = tf.cond(pred=reset_episode_cond, true_fn=increment_episode,
+                                 false_fn=no_op_int)
+  increment_reset_op = tf.cond(pred=reset_env_cond, true_fn=increment_reset, false_fn=no_op_int)
   increment_op = tf.group(increment_step_op, increment_episode_op,
                           increment_reset_op)
 
@@ -153,36 +153,36 @@ def collect_experience(tf_env, agent, meta_agent, state_preprocess,
       context_reward, meta_reward = collect_experience_ops
       collect_experience_ops = list(collect_experience_ops)
       collect_experience_ops.append(
-          update_episode_rewards(tf.reduce_sum(context_reward), meta_reward,
+          update_episode_rewards(tf.reduce_sum(input_tensor=context_reward), meta_reward,
                                  reset_episode_cond))
 
   meta_action_every_n = agent.tf_context.meta_action_every_n
   with tf.control_dependencies(collect_experience_ops):
     transition = [state, action, reward, discount, next_state]
 
-    meta_action = tf.to_float(
-        tf.concat(context, -1))  # Meta agent action is low-level context
+    meta_action = tf.cast(
+        tf.concat(context, -1), dtype=tf.float32)  # Meta agent action is low-level context
 
     meta_end = tf.logical_and(  # End of meta-transition.
         tf.equal(agent.tf_context.t % meta_action_every_n, 1),
         agent.tf_context.t > 1)
-    with tf.variable_scope(tf.get_variable_scope(), reuse=tf.AUTO_REUSE):
-      states_var = tf.get_variable('states_var',
+    with tf.compat.v1.variable_scope(tf.compat.v1.get_variable_scope(), reuse=tf.compat.v1.AUTO_REUSE):
+      states_var = tf.compat.v1.get_variable('states_var',
                                    [meta_action_every_n, state.shape[-1]],
                                    state.dtype)
-      actions_var = tf.get_variable('actions_var',
+      actions_var = tf.compat.v1.get_variable('actions_var',
                                     [meta_action_every_n, action.shape[-1]],
                                     action.dtype)
-      state_var = tf.get_variable('state_var', state.shape, state.dtype)
-      reward_var = tf.get_variable('reward_var', reward.shape, reward.dtype)
-      meta_action_var = tf.get_variable('meta_action_var',
+      state_var = tf.compat.v1.get_variable('state_var', state.shape, state.dtype)
+      reward_var = tf.compat.v1.get_variable('reward_var', reward.shape, reward.dtype)
+      meta_action_var = tf.compat.v1.get_variable('meta_action_var',
                                         meta_action.shape, meta_action.dtype)
       meta_context_var = [
-          tf.get_variable('meta_context_var%d' % idx,
+          tf.compat.v1.get_variable('meta_context_var%d' % idx,
                           meta_context[idx].shape, meta_context[idx].dtype)
           for idx in range(len(meta_context))]
 
-    actions_var_upd = tf.scatter_update(
+    actions_var_upd = tf.compat.v1.scatter_update(
         actions_var, (agent.tf_context.t - 2) % meta_action_every_n, action)
     with tf.control_dependencies([actions_var_upd]):
       actions = tf.identity(actions_var) + tf.zeros_like(actions_var)
@@ -192,7 +192,7 @@ def collect_experience(tf_env, agent, meta_agent, state_preprocess,
     reward = 0.1 * meta_reward
     meta_transition = [state_var, meta_action_var,
                        reward_var + reward,
-                       discount * (1 - tf.to_float(next_reset_episode_cond)),
+                       discount * (1 - tf.cast(next_reset_episode_cond, dtype=tf.float32)),
                        next_state]
     meta_transition.extend([states_var, actions])
     if store_context:  # store current and next context into replay
@@ -207,32 +207,32 @@ def collect_experience(tf_env, agent, meta_agent, state_preprocess,
     )
 
   with tf.control_dependencies([collect_experience_op]):
-    collect_experience_op = tf.cond(reset_env_cond,
-                                    tf_env.reset,
-                                    tf_env.current_time_step)
+    collect_experience_op = tf.cond(pred=reset_env_cond,
+                                    true_fn=tf_env.reset,
+                                    false_fn=tf_env.current_time_step)
 
     meta_period = tf.equal(agent.tf_context.t % meta_action_every_n, 1)
-    states_var_upd = tf.scatter_update(
+    states_var_upd = tf.compat.v1.scatter_update(
         states_var, (agent.tf_context.t - 1) % meta_action_every_n,
         next_state)
-    state_var_upd = tf.assign(
+    state_var_upd = tf.compat.v1.assign(
         state_var,
-        tf.cond(meta_period, lambda: next_state, lambda: state_var))
-    reward_var_upd = tf.assign(
+        tf.cond(pred=meta_period, true_fn=lambda: next_state, false_fn=lambda: state_var))
+    reward_var_upd = tf.compat.v1.assign(
         reward_var,
-        tf.cond(meta_period,
-                lambda: tf.zeros_like(reward_var),
-                lambda: reward_var + reward))
-    meta_action = tf.to_float(tf.concat(agent.context_vars, -1))
-    meta_action_var_upd = tf.assign(
+        tf.cond(pred=meta_period,
+                true_fn=lambda: tf.zeros_like(reward_var),
+                false_fn=lambda: reward_var + reward))
+    meta_action = tf.cast(tf.concat(agent.context_vars, -1), dtype=tf.float32)
+    meta_action_var_upd = tf.compat.v1.assign(
         meta_action_var,
-        tf.cond(meta_period, lambda: meta_action, lambda: meta_action_var))
+        tf.cond(pred=meta_period, true_fn=lambda: meta_action, false_fn=lambda: meta_action_var))
     meta_context_var_upd = [
-        tf.assign(
+        tf.compat.v1.assign(
             meta_context_var[idx],
-            tf.cond(meta_period,
-                    lambda: meta_agent.context_vars[idx],
-                    lambda: meta_context_var[idx]))
+            tf.cond(pred=meta_period,
+                    true_fn=lambda: meta_agent.context_vars[idx],
+                    false_fn=lambda: meta_context_var[idx]))
         for idx in range(len(meta_context))]
 
   return tf.group(
@@ -257,8 +257,8 @@ def sample_best_meta_actions(state_reprs, next_state_reprs, prev_meta_actions,
       [tf.reshape(sampled_actions, [-1, sampled_actions.shape[-1]])]),
                                  [k, low_states.shape[0],
                                   low_states.shape[1], -1])
-  fitness = tf.reduce_sum(sampled_log_probs, [2, 3])
-  best_actions = tf.argmax(fitness, 0)
+  fitness = tf.reduce_sum(input_tensor=sampled_log_probs, axis=[2, 3])
+  best_actions = tf.argmax(input=fitness, axis=0)
   actions = tf.gather_nd(
       sampled_actions,
       tf.stack([best_actions,
@@ -334,7 +334,7 @@ def train_uvf(train_dir,
     assert agent_class.ACTION_TYPE == 'continuous'
 
   assert agent_class.ACTION_TYPE == meta_agent_class.ACTION_TYPE
-  with tf.variable_scope('meta_agent'):
+  with tf.compat.v1.variable_scope('meta_agent'):
     meta_agent = meta_agent_class(
         observation_spec,
         action_spec,
@@ -342,7 +342,7 @@ def train_uvf(train_dir,
         debug_summaries=debug_summaries)
   meta_agent.set_replay(replay=meta_replay_buffer)
 
-  with tf.variable_scope('uvf_agent'):
+  with tf.compat.v1.variable_scope('uvf_agent'):
     uvf_agent = agent_class(
         observation_spec,
         action_spec,
@@ -351,10 +351,10 @@ def train_uvf(train_dir,
     uvf_agent.set_meta_agent(agent=meta_agent)
     uvf_agent.set_replay(replay=replay_buffer)
 
-  with tf.variable_scope('state_preprocess'):
+  with tf.compat.v1.variable_scope('state_preprocess'):
     state_preprocess = state_preprocess_class()
 
-  with tf.variable_scope('inverse_dynamics'):
+  with tf.compat.v1.variable_scope('inverse_dynamics'):
     inverse_dynamics = inverse_dynamics_class(
         meta_agent.sub_context_as_action_specs[0])
 
@@ -378,12 +378,12 @@ def train_uvf(train_dir,
       ('meta_replay_buffer_adds', meta_replay_buffer.get_num_adds()),
   ])
 
-  tf.summary.scalar('avg_episode_rewards',
-                    tf.reduce_mean(episode_rewards[1:]))
-  tf.summary.scalar('avg_episode_meta_rewards',
-                    tf.reduce_mean(episode_meta_rewards[1:]))
-  tf.summary.histogram('episode_rewards', episode_rewards[1:])
-  tf.summary.histogram('episode_meta_rewards', episode_meta_rewards[1:])
+  tf.compat.v1.summary.scalar('avg_episode_rewards',
+                    tf.reduce_mean(input_tensor=episode_rewards[1:]))
+  tf.compat.v1.summary.scalar('avg_episode_meta_rewards',
+                    tf.reduce_mean(input_tensor=episode_meta_rewards[1:]))
+  tf.compat.v1.summary.histogram('episode_rewards', episode_rewards[1:])
+  tf.compat.v1.summary.histogram('episode_meta_rewards', episode_meta_rewards[1:])
 
   # Create init ops
   action_fn = uvf_agent.action
@@ -451,11 +451,11 @@ def train_uvf(train_dir,
       my_gamma = gamma
       n_updates = num_updates
 
-    with tf.name_scope(mode):
+    with tf.compat.v1.name_scope(mode):
       batch = buff.get_random_batch(batch_size, num_steps=num_steps)
       states, actions, rewards, discounts, next_states = batch[:5]
-      with tf.name_scope('Reward'):
-        tf.summary.scalar('average_step_reward', tf.reduce_mean(rewards))
+      with tf.compat.v1.name_scope('Reward'):
+        tf.compat.v1.summary.scalar('average_step_reward', tf.reduce_mean(input_tensor=rewards))
       rewards *= reward_scale_factor
       batch_queue = slim.prefetch_queue.prefetch_queue(
           [states, actions, rewards, discounts, next_states] + batch[5:],
@@ -534,13 +534,13 @@ def train_uvf(train_dir,
                                       context_rewards, context_discounts,
                                       merged_next_states)
 
-      critic_loss = tf.reduce_mean(critic_loss)
+      critic_loss = tf.reduce_mean(input_tensor=critic_loss)
 
       actor_loss = agent.actor_loss(merged_states, actions,
                                     context_rewards, context_discounts,
                                     merged_next_states)
-      actor_loss *= tf.to_float(  # Only update actor every N steps.
-          tf.equal(n_updates % target_update_period, 0))
+      actor_loss *= tf.cast(  # Only update actor every N steps.
+          tf.equal(n_updates % target_update_period, 0), dtype=tf.float32)
 
       critic_train_op = slim.learning.create_train_op(
           critic_loss,
@@ -609,19 +609,19 @@ def train_uvf(train_dir,
   ] + list(uvf_agent.context_vars) + list(meta_agent.context_vars) + state_preprocess.get_trainable_vars()
   # add critic vars, since some test evaluation depends on them
   policy_vars += uvf_agent.get_trainable_critic_vars() + meta_agent.get_trainable_critic_vars()
-  policy_saver = tf.train.Saver(
+  policy_saver = tf.compat.v1.train.Saver(
       policy_vars, max_to_keep=max_policies_to_save, sharded=False)
 
   lowlevel_vars = (uvf_agent.get_actor_vars() +
                    uvf_agent.get_trainable_critic_vars() +
                    state_preprocess.get_trainable_vars())
-  lowlevel_saver = tf.train.Saver(lowlevel_vars)
+  lowlevel_saver = tf.compat.v1.train.Saver(lowlevel_vars)
 
   def policy_save_fn(sess):
     policy_saver.save(
         sess, policy_save_path, global_step=global_step, write_meta_graph=False)
     if save_policy_interval_secs > 0:
-      tf.logging.info(
+      tf.compat.v1.logging.info(
           'Wait %d secs after save policy.' % save_policy_interval_secs)
       time.sleep(save_policy_interval_secs)
 
@@ -635,7 +635,7 @@ def train_uvf(train_dir,
       save_policy_every_n_steps=save_policy_every_n_steps,
       should_stop_early=should_stop_early).train_step
 
-  local_init_op = tf.local_variables_initializer()
+  local_init_op = tf.compat.v1.local_variables_initializer()
   init_targets_op = tf.group(uvf_agent.update_targets(1.0),
                              meta_agent.update_targets(1.0))
 
@@ -644,7 +644,7 @@ def train_uvf(train_dir,
     sess.run(local_init_op)
     sess.run(init_targets_op)
     if load_path:
-      tf.logging.info('Restoring low-level from %s' % load_path)
+      tf.compat.v1.logging.info('Restoring low-level from %s' % load_path)
       lowlevel_saver.restore(sess, load_path)
     global_step_value = sess.run(global_step)
     assert global_step_value == 0, 'Global step should be zero.'
@@ -654,8 +654,8 @@ def train_uvf(train_dir,
     for _ in range(initial_steps):
       collect_experience_call()
 
-  train_saver = tf.train.Saver(max_to_keep=2, sharded=True)
-  tf.logging.info('train dir: %s', train_dir)
+  train_saver = tf.compat.v1.train.Saver(max_to_keep=2, sharded=True)
+  tf.compat.v1.logging.info('train dir: %s', train_dir)
   return slim.learning.train(
       train_ops,
       train_dir,

@@ -1,79 +1,191 @@
-![Logo](https://storage.googleapis.com/tf_model_garden/tf_model_garden_logo.png)
+![TensorFlow Requirement: 1.x](https://img.shields.io/badge/TensorFlow%20Requirement-1.x-brightgreen)
+![TensorFlow 2 Not Supported](https://img.shields.io/badge/TensorFlow%202%20Not%20Supported-%E2%9C%95-red.svg)
 
-# TensorFlow Research Models
+# vid2depth
 
-This directory contains code implementations and pre-trained models of published research papers.
+**Unsupervised Learning of Depth and Ego-Motion from Monocular Video Using 3D Geometric Constraints**
 
-The research models are maintained by their respective authors.
+Reza Mahjourian, Martin Wicke, Anelia Angelova
 
-## Table of Contents
-- [TensorFlow Research Models](#tensorflow-research-models)
-  - [Table of Contents](#table-of-contents)
-  - [Modeling Libraries and Models](#modeling-libraries-and-models)
-  - [Models and Implementations](#models-and-implementations)
-    - [Computer Vision](#computer-vision)
-    - [Natural Language Processing](#natural-language-processing)
-    - [Audio and Speech](#audio-and-speech)
-    - [Reinforcement Learning](#reinforcement-learning)
-    - [Others](#others)
-    - [Old Models and Implementations in TensorFlow 1](#old-models-and-implementations-in-tensorflow-1)
-  - [Contributions](#contributions)
+CVPR 2018
 
-## Modeling Libraries and Models
+Project website: [https://sites.google.com/view/vid2depth](https://sites.google.com/view/vid2depth)
 
-| Directory | Name | Description | Maintainer(s) |
-|-----------|------|-------------|---------------|
-| [object_detection](object_detection) | TensorFlow Object Detection API | A framework that makes it easy to construct, train and deploy object detection models<br /><br />A collection of object detection models pre-trained on the COCO dataset, the Kitti dataset, the Open Images dataset, the AVA v2.1 dataset, and the iNaturalist Species Detection Dataset| jch1, tombstone, pkulzc |
-| [slim](slim) | TensorFlow-Slim Image Classification Model Library | A lightweight high-level API of TensorFlow for defining, training and evaluating image classification models <br />• Inception V1/V2/V3/V4<br />• Inception-ResNet-v2<br />• ResNet V1/V2<br />• VGG 16/19<br />• MobileNet V1/V2/V3<br />• NASNet-A_Mobile/Large<br />• PNASNet-5_Large/Mobile | sguada, marksandler2 |
+ArXiv: [https://arxiv.org/pdf/1802.05522.pdf](https://arxiv.org/pdf/1802.05522.pdf)
 
-## Models and Implementations
+<p align="center">
+<a href="https://sites.google.com/view/vid2depth"><img src='https://storage.googleapis.com/vid2depth/media/sample_video_small.gif'></a>
+</p>
 
-### Computer Vision
+<p align="center">
+<a href="https://sites.google.com/view/vid2depth"><img src='https://storage.googleapis.com/vid2depth/media/approach.png' width=400></a>
+</p>
 
-| Directory | Paper(s) | Conference | Maintainer(s) |
-|-----------|----------|------------|---------------|
-| [attention_ocr](attention_ocr) | [Attention-based Extraction of Structured Information from Street View Imagery](https://arxiv.org/abs/1704.03549) | ICDAR 2017 | xavigibert |
-| [autoaugment](autoaugment) | [1] [AutoAugment](https://arxiv.org/abs/1805.09501)<br />[2] [Wide Residual Networks](https://arxiv.org/abs/1605.07146)<br />[3] [Shake-Shake regularization](https://arxiv.org/abs/1705.07485)<br />[4] [ShakeDrop Regularization for Deep Residual Learning](https://arxiv.org/abs/1802.02375) | [1] CVPR 2019<br />[2] BMVC 2016<br /> [3] ICLR 2017<br /> [4] ICLR 2018 | barretzoph |
-| [deeplab](deeplab) | [1] [DeepLabv1: Semantic Image Segmentation with Deep Convolutional Nets and Fully Connected CRFs](https://arxiv.org/abs/1412.7062)<br />[2] [DeepLabv2: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs](https://arxiv.org/abs/1606.00915)<br />[3] [DeepLabv3: Rethinking Atrous Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1706.05587)<br />[4] [DeepLabv3+: Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1802.02611)<br />| [1] ICLR 2015 <br />[2] TPAMI 2017 <br />[4] ECCV 2018 | aquariusjay, yknzhu |
-| [delf](delf)  | [1] DELF (DEep Local Features): [Large-Scale Image Retrieval with Attentive Deep Local Features](https://arxiv.org/abs/1612.06321)<br />[2] [Detect-to-Retrieve: Efficient Regional Aggregation for Image Search](https://arxiv.org/abs/1812.01584)<br />[3] DELG (DEep Local and Global features): [Unifying Deep Local and Global Features for Image Search](https://arxiv.org/abs/2001.05027)<br />[4] GLDv2: [Google Landmarks Dataset v2 -- A Large-Scale Benchmark for Instance-Level Recognition and Retrieval](https://arxiv.org/abs/2004.01804) | [1] ICCV 2017<br />[2] CVPR 2019<br />[4] CVPR 2020 | andrefaraujo |
-| [lstm_object_detection](lstm_object_detection) | [Mobile Video Object Detection with Temporally-Aware Feature Maps](https://arxiv.org/abs/1711.06368) | CVPR 2018 | yinxiaoli, yongzhe2160, lzyuan |
-| [marco](marco) | MARCO: [Classification of crystallization outcomes using deep convolutional neural networks](https://arxiv.org/abs/1803.10342) | | vincentvanhoucke |
-| [vid2depth](vid2depth) | [Unsupervised Learning of Depth and Ego-Motion from Monocular Video Using 3D Geometric Constraints](https://arxiv.org/abs/1802.05522) | CVPR 2018 | rezama |
+## Update: TF2 version.
 
-### Natural Language Processing
+Please see [https://github.com/IAMAl/vid2depth_tf2](https://github.com/IAMAl/vid2depth_tf2)
+for a TF2 implementation of vid2depth.
 
-| Directory | Paper(s) | Conference | Maintainer(s) |
-|-----------|----------|------------|---------------|
-| [adversarial_text](adversarial_text) | [1] [Adversarial Training Methods for Semi-Supervised Text](https://arxiv.org/abs/1605.07725) Classification<br />[2] [Semi-supervised Sequence Learning](https://arxiv.org/abs/1511.01432) | [1] ICLR 2017<br />[2] NIPS 2015 | rsepassi, a-dai |
-| [cvt_text](cvt_text) | [Semi-Supervised Sequence Modeling with Cross-View Training](https://arxiv.org/abs/1809.08370) | EMNLP 2018 | clarkkev, lmthang |
+## 1. Installation
 
-### Audio and Speech
+### Requirements
 
-| Directory | Paper(s) | Conference | Maintainer(s) |
-|-----------|----------|------------|---------------|
-| [audioset](audioset) | [1] [Audio Set: An ontology and human-labeled dataset for audio events](https://research.google/pubs/pub45857/)<br />[2] [CNN Architectures for Large-Scale Audio Classification](https://research.google/pubs/pub45611/) | ICASSP 2017 | plakal, dpwe |
-| [deep_speech](deep_speech) | [Deep Speech 2](https://arxiv.org/abs/1512.02595) | ICLR 2016 | yhliang2018 |
+#### Python Packages
 
-### Reinforcement Learning
+```shell
+mkvirtualenv venv  # Optionally create a virtual environment.
+pip install absl-py
+pip install matplotlib
+pip install numpy
+pip install scipy
+pip install tensorflow
+```
 
-| Directory | Paper(s) | Conference | Maintainer(s) |
-|-----------|----------|------------|---------------|
-| [efficient-hrl](efficient-hrl) | [1] [Data-Efficient Hierarchical Reinforcement Learning](https://arxiv.org/abs/1805.08296)<br />[2] [Near-Optimal Representation Learning for Hierarchical Reinforcement Learning](https://arxiv.org/abs/1810.01257) | [1] NIPS 2018<br /> [2] ICLR 2019 | ofirnachum |
-| [pcl_rl](pcl_rl) | [1] [Improving Policy Gradient by Exploring Under-appreciated Rewards](https://arxiv.org/abs/1611.09321)<br />[2] [Bridging the Gap Between Value and Policy Based Reinforcement Learning](https://arxiv.org/abs/1702.08892)<br />[3] [Trust-PCL: An Off-Policy Trust Region Method for Continuous Control](https://arxiv.org/abs/1707.01891) | [1] ICLR 2017<br />[2] NIPS 2017<br />[3] ICLR 2018 | ofirnachum |
+### Download vid2depth
 
-### Others
+```shell
+git clone --depth 1 https://github.com/tensorflow/models.git
+```
 
-| Directory | Paper(s) | Conference | Maintainer(s) |
-|-----------|----------|------------|---------------|
-| [lfads](lfads) | [LFADS - Latent Factor Analysis via Dynamical Systems](https://arxiv.org/abs/1608.06315) | | jazcollins, sussillo |
-| [rebar](rebar) | [REBAR: Low-variance, unbiased gradient estimates for discrete latent variable models](https://arxiv.org/abs/1703.07370) | NIPS 2017 | gjtucker |
+## 2. Datasets
 
-### Old Models and Implementations in TensorFlow 1
+### Download KITTI dataset (174GB)
 
-:warning: If you are looking for old models, please visit the [Archive branch](https://github.com/tensorflow/models/tree/archive/research).
+```shell
+mkdir -p ~/vid2depth/kitti-raw-uncompressed
+cd ~/vid2depth/kitti-raw-uncompressed
+wget https://raw.githubusercontent.com/mrharicot/monodepth/master/utils/kitti_archives_to_download.txt
+wget -i kitti_archives_to_download.txt
+unzip "*.zip"
+```
 
----
+### Download Cityscapes dataset (110GB) (optional)
 
-## Contributions
+You will need to register in order to download the data.  Download the following
+files:
 
-If you want to contribute, please review the [contribution guidelines](https://github.com/tensorflow/models/wiki/How-to-contribute).
+* leftImg8bit_sequence_trainvaltest.zip
+* camera_trainvaltest.zip
+
+### Download Bike dataset (34GB) (optional)
+
+Please see [https://research.google/tools/datasets/bike-video/](https://research.google/tools/datasets/bike-video/)
+for info on the bike video dataset.
+
+Special thanks to [Guangming Wang](https://guangmingw.github.io/) for helping us
+restore this dataset after it was accidentally deleted.
+
+```shell
+mkdir -p ~/vid2depth/bike-uncompressed
+cd ~/vid2depth/bike-uncompressed
+wget https://storage.googleapis.com/vid2depth/dataset/BikeVideoDataset.tar
+tar xvf BikeVideoDataset.tar
+```
+
+## 3. Inference
+
+### Download trained model
+
+```shell
+mkdir -p ~/vid2depth/trained-model
+cd ~/vid2depth/trained-model
+wget https://storage.cloud.google.com/vid2depth/model/model-119496.zip
+unzip model-119496.zip
+```
+
+### Run inference
+
+```shell
+cd tensorflow/models/research/vid2depth
+python inference.py \
+  --kitti_dir ~/vid2depth/kitti-raw-uncompressed \
+  --output_dir ~/vid2depth/inference \
+  --kitti_video 2011_09_26/2011_09_26_drive_0009_sync \
+  --model_ckpt ~/vid2depth/trained-model/model-119496
+```
+
+## 4. Training
+
+### Prepare KITTI training sequences
+
+```shell
+# Prepare training sequences.
+cd tensorflow/models/research/vid2depth
+python dataset/gen_data.py \
+  --dataset_name kitti_raw_eigen \
+  --dataset_dir ~/vid2depth/kitti-raw-uncompressed \
+  --data_dir ~/vid2depth/data/kitti_raw_eigen \
+  --seq_length 3
+```
+
+### Prepare Cityscapes training sequences (optional)
+
+```shell
+# Prepare training sequences.
+cd tensorflow/models/research/vid2depth
+python dataset/gen_data.py \
+  --dataset_name cityscapes \
+  --dataset_dir ~/vid2depth/cityscapes-uncompressed \
+  --data_dir ~/vid2depth/data/cityscapes \
+  --seq_length 3
+```
+
+### Prepare Bike training sequences (optional)
+
+```shell
+# Prepare training sequences.
+cd tensorflow/models/research/vid2depth
+python dataset/gen_data.py \
+  --dataset_name bike \
+  --dataset_dir ~/vid2depth/bike-uncompressed \
+  --data_dir ~/vid2depth/data/bike \
+  --seq_length 3
+```
+
+### Compile the ICP op
+
+The pre-trained model is trained using the ICP loss.  It is possible to run
+inference on this pre-trained model without compiling the ICP op.  It is also
+possible to train a new model from scratch without compiling the ICP op by
+setting the icp loss to zero.
+
+If you would like to compile the op and run a new training job using it, please
+use the CMakeLists.txt file at
+[https://github.com/IAMAl/vid2depth_tf2/tree/master/ops](https://github.com/IAMAl/vid2depth_tf2/tree/master/ops).
+
+### Run training
+
+```shell
+# Train
+cd tensorflow/models/research/vid2depth
+python train.py \
+  --data_dir ~/vid2depth/data/kitti_raw_eigen \
+  --seq_length 3 \
+  --reconstr_weight 0.85 \
+  --smooth_weight 0.05 \
+  --ssim_weight 0.15 \
+  --icp_weight 0 \
+  --checkpoint_dir ~/vid2depth/checkpoints
+```
+
+## Reference
+If you find our work useful in your research please consider citing our paper:
+
+```
+@inproceedings{mahjourian2018unsupervised,
+  title={Unsupervised Learning of Depth and Ego-Motion from Monocular Video Using 3D Geometric Constraints},
+    author={Mahjourian, Reza and Wicke, Martin and Angelova, Anelia},
+    booktitle = {CVPR},
+    year={2018}
+}
+```
+
+## Contact
+
+To ask questions or report issues please open an issue on the tensorflow/models
+[issues tracker](https://github.com/tensorflow/models/issues). Please assign
+issues to [@rezama](https://github.com/rezama).
+
+## Credits
+
+This implementation is derived from [SfMLearner](https://github.com/tinghuiz/SfMLearner) by [Tinghui Zhou](https://github.com/tinghuiz).

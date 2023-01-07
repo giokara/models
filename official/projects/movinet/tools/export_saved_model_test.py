@@ -86,7 +86,7 @@ class ExportSavedModelTest(tf.test.TestCase):
     example_input = tf.ones([1, 8, 172, 172, 3])
     frames = tf.split(example_input, example_input.shape[1], axis=1)
 
-    init_states = init_states_fn(tf.shape(example_input))
+    init_states = init_states_fn(tf.shape(input=example_input))
 
     expected_outputs, _ = model({**init_states, 'image': example_input})
 

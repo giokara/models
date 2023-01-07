@@ -32,7 +32,7 @@ def _get_noise_shape(
   """Computes the shape of the binary mask for dropout."""
   # If noise_shape is none return immediately.
   if noise_shape is None:
-    return tf.shape(x)
+    return tf.shape(input=x)
 
   try:
     # Best effort to figure out the intended shape.
@@ -84,8 +84,8 @@ def stateless_dropout(x: tf.Tensor,
       tensor. `rate=1` is disallowed, because the output would be all zeros,
       which is likely not what was intended.
   """
-  with tf.name_scope(name or 'stateless_dropout') as name:
-    x = tf.convert_to_tensor(x, name='x')
+  with tf.compat.v1.name_scope(name or 'stateless_dropout') as name:
+    x = tf.convert_to_tensor(value=x, name='x')
     if not x.dtype.is_floating:
       raise ValueError('x has to be a floating point tensor since it\'s going '
                        ' to be scaled. Got a %s tensor instead.' % x.dtype)
@@ -103,7 +103,7 @@ def stateless_dropout(x: tf.Tensor,
     if tf.get_static_value(rate) == 0:
       return x
 
-    rate = tf.convert_to_tensor(rate, dtype=x.dtype, name='rate')
+    rate = tf.convert_to_tensor(value=rate, dtype=x.dtype, name='rate')
     rate.shape.assert_has_rank(0)
     noise_shape = _get_noise_shape(x, noise_shape)
     # Sample a uniform distribution on [0.0, 1.0) and select values larger than

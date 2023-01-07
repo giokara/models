@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""TensorFlow Models Libraries."""
-# pylint: disable=wildcard-import
-from tensorflow_models import nlp
-from tensorflow_models import vision
+"""TensorFlow Models Vision Libraries."""
+from official.vision import configs
+from official.vision import serving
+from official.vision.modeling import *
+from official.vision.ops import *
+from official.vision.tasks import *
 
-from official import core
-from official.modeling import hyperparams
-from official.modeling import optimization
-from official.modeling import tf_utils as utils

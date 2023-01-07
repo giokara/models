@@ -104,22 +104,22 @@ def _record_accuracy(metric, logits, labels):
 
 def _attention_summaries(scores, global_step):
   """Record statistics of the attention score."""
-  tf.summary.image(
+  tf.compat.v1.summary.image(
       'batch_attention',
-      scores / tf.reduce_max(scores + 1e-3),
+      scores / tf.reduce_max(input_tensor=scores + 1e-3),
       step=global_step)
-  tf.summary.scalar('attention/max', tf.reduce_max(scores), step=global_step)
-  tf.summary.scalar('attention/min', tf.reduce_min(scores), step=global_step)
-  tf.summary.scalar('attention/mean', tf.reduce_mean(scores), step=global_step)
-  tf.summary.scalar(
+  tf.compat.v1.summary.scalar('attention/max', tf.reduce_max(input_tensor=scores), step=global_step)
+  tf.compat.v1.summary.scalar('attention/min', tf.reduce_min(input_tensor=scores), step=global_step)
+  tf.compat.v1.summary.scalar('attention/mean', tf.reduce_mean(input_tensor=scores), step=global_step)
+  tf.compat.v1.summary.scalar(
       'attention/percent_25',
       tfp.stats.percentile(scores, 25.0),
       step=global_step)
-  tf.summary.scalar(
+  tf.compat.v1.summary.scalar(
       'attention/percent_50',
       tfp.stats.percentile(scores, 50.0),
       step=global_step)
-  tf.summary.scalar(
+  tf.compat.v1.summary.scalar(
       'attention/percent_75',
       tfp.stats.percentile(scores, 75.0),
       step=global_step)
@@ -320,7 +320,7 @@ def main(argv):
         if FLAGS.use_autoencoder:
           block3 = tf.stop_gradient(backbone_blocks['block3'])
           reconstruction_loss = tf.math.reduce_mean(
-              tf.keras.losses.MSE(block3, dim_expanded_features))
+              input_tensor=tf.keras.losses.MSE(block3, dim_expanded_features))
         else:
           reconstruction_loss = 0
 
@@ -338,11 +338,11 @@ def main(argv):
       global_step = optimizer.iterations
 
       # Input image-related summaries.
-      tf.summary.image('batch_images', (images + 1.0) / 2.0, step=global_step)
-      tf.summary.scalar(
-          'image_range/max', tf.reduce_max(images), step=global_step)
-      tf.summary.scalar(
-          'image_range/min', tf.reduce_min(images), step=global_step)
+      tf.compat.v1.summary.image('batch_images', (images + 1.0) / 2.0, step=global_step)
+      tf.compat.v1.summary.scalar(
+          'image_range/max', tf.reduce_max(input_tensor=images), step=global_step)
+      tf.compat.v1.summary.scalar(
+          'image_range/min', tf.reduce_min(input_tensor=images), step=global_step)
 
       # Attention and sparsity summaries.
       _attention_summaries(attn_scores, global_step)
@@ -351,11 +351,11 @@ def main(argv):
           for k, v in backbone_blocks.items()
       }
       for k, v in activations_zero_fractions.items():
-        tf.summary.scalar(k, v, step=global_step)
+        tf.compat.v1.summary.scalar(k, v, step=global_step)
 
       # Scaling factor summary for cosine logits for a DELG model.
       if FLAGS.delg_global_features:
-        tf.summary.scalar(
+        tf.compat.v1.summary.scalar(
             'desc/scale_factor', model.scale_factor, step=global_step)
 
       # Record train accuracies.
@@ -464,21 +464,21 @@ def main(argv):
           global_step_value = global_step.numpy()
 
           # LR, losses and accuracies summaries.
-          tf.summary.scalar(
+          tf.compat.v1.summary.scalar(
               'learning_rate', optimizer.learning_rate, step=global_step)
-          tf.summary.scalar(
+          tf.compat.v1.summary.scalar(
               'loss/desc/crossentropy', desc_dist_loss, step=global_step)
-          tf.summary.scalar(
+          tf.compat.v1.summary.scalar(
               'loss/attn/crossentropy', attn_dist_loss, step=global_step)
           if FLAGS.use_autoencoder:
-            tf.summary.scalar(
+            tf.compat.v1.summary.scalar(
                 'loss/recon/mse', recon_dist_loss, step=global_step)
 
-          tf.summary.scalar(
+          tf.compat.v1.summary.scalar(
               'train_accuracy/desc',
               desc_train_accuracy.result(),
               step=global_step)
-          tf.summary.scalar(
+          tf.compat.v1.summary.scalar(
               'train_accuracy/attn',
               attn_train_accuracy.result(),
               step=global_step)
@@ -487,7 +487,7 @@ def main(argv):
           current_time = time.time()
           if (last_summary_step_value is not None and
               last_summary_time is not None):
-            tf.summary.scalar(
+            tf.compat.v1.summary.scalar(
                 'global_steps_per_sec',
                 (global_step_value - last_summary_step_value) /
                 (current_time - last_summary_time),
@@ -515,9 +515,9 @@ def main(argv):
                 break
 
             # Log validation results to tensorboard.
-            tf.summary.scalar(
+            tf.compat.v1.summary.scalar(
                 'validation/desc', desc_validation_result, step=global_step)
-            tf.summary.scalar(
+            tf.compat.v1.summary.scalar(
                 'validation/attn', attn_validation_result, step=global_step)
 
             logging.info('\nValidation(%f)\n', global_step_value)

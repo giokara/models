@@ -54,7 +54,7 @@ class MoViNetTest(parameterized.TestCase, tf.test.TestCase):
     )
     inputs = tf.ones([1, 8, 128, 128, 3])
 
-    init_states = backbone.init_states(tf.shape(inputs))
+    init_states = backbone.init_states(tf.shape(input=inputs))
     endpoints, new_states = backbone({**init_states, 'image': inputs})
 
     self.assertAllEqual(endpoints['stem'].shape, [1, 8, 64, 64, 8])
@@ -79,7 +79,7 @@ class MoViNetTest(parameterized.TestCase, tf.test.TestCase):
     )
     inputs = tf.ones([1, 5, 128, 128, 3])
 
-    init_states = backbone.init_states(tf.shape(inputs))
+    init_states = backbone.init_states(tf.shape(input=inputs))
     expected_endpoints, _ = backbone({**init_states, 'image': inputs})
 
     frames = tf.split(inputs, inputs.shape[1], axis=1)
@@ -93,7 +93,7 @@ class MoViNetTest(parameterized.TestCase, tf.test.TestCase):
 
     # The expected final output is simply the mean across frames
     expected = expected_endpoints['head']
-    expected = tf.reduce_mean(expected, 1, keepdims=True)
+    expected = tf.reduce_mean(input_tensor=expected, axis=1, keepdims=True)
 
     self.assertEqual(predicted.shape, expected.shape)
     self.assertAllClose(predicted, expected, 1e-5, 1e-5)
@@ -110,7 +110,7 @@ class MoViNetTest(parameterized.TestCase, tf.test.TestCase):
     )
     inputs = tf.ones([1, 5, 128, 128, 3])
 
-    init_states = backbone.init_states(tf.shape(inputs))
+    init_states = backbone.init_states(tf.shape(input=inputs))
     expected_endpoints, _ = backbone({**init_states, 'image': inputs})
 
     frames = tf.split(inputs, inputs.shape[1], axis=1)
@@ -124,7 +124,7 @@ class MoViNetTest(parameterized.TestCase, tf.test.TestCase):
 
     # The expected final output is simply the mean across frames
     expected = expected_endpoints['head']
-    expected = tf.reduce_mean(expected, 1, keepdims=True)
+    expected = tf.reduce_mean(input_tensor=expected, axis=1, keepdims=True)
 
     self.assertEqual(predicted.shape, expected.shape)
     self.assertAllClose(predicted, expected, 1e-5, 1e-5)
@@ -152,7 +152,7 @@ class MoViNetTest(parameterized.TestCase, tf.test.TestCase):
     )
     inputs = tf.ones([1, 5, 128, 128, 3])
 
-    init_states = backbone.init_states(tf.shape(inputs))
+    init_states = backbone.init_states(tf.shape(input=inputs))
     expected_endpoints, _ = backbone({**init_states, 'image': inputs})
 
     frames = tf.split(inputs, inputs.shape[1], axis=1)
@@ -166,7 +166,7 @@ class MoViNetTest(parameterized.TestCase, tf.test.TestCase):
 
     # The expected final output is simply the mean across frames
     expected = expected_endpoints['head']
-    expected = tf.reduce_mean(expected, 1, keepdims=True)
+    expected = tf.reduce_mean(input_tensor=expected, axis=1, keepdims=True)
 
     self.assertEqual(predicted.shape, expected.shape)
     self.assertAllClose(predicted, expected, 1e-5, 1e-5)
@@ -182,7 +182,7 @@ class MoViNetTest(parameterized.TestCase, tf.test.TestCase):
     )
     inputs = tf.ones([1, 5, 128, 128, 3])
 
-    init_states = backbone.init_states(tf.shape(inputs))
+    init_states = backbone.init_states(tf.shape(input=inputs))
     expected_endpoints, _ = backbone({**init_states, 'image': inputs})
 
     frames = tf.split(inputs, inputs.shape[1], axis=1)
@@ -196,7 +196,7 @@ class MoViNetTest(parameterized.TestCase, tf.test.TestCase):
 
     # The expected final output is simply the mean across frames
     expected = expected_endpoints['head']
-    expected = tf.reduce_mean(expected, 1, keepdims=True)
+    expected = tf.reduce_mean(input_tensor=expected, axis=1, keepdims=True)
 
     self.assertEqual(predicted.shape, expected.shape)
     self.assertAllClose(predicted, expected, 1e-5, 1e-5)

@@ -38,7 +38,7 @@ def resize_bilinear(images, size, output_dtype=tf.float32):
     A tensor of size [batch, height_out, width_out, channels] as a dtype of
       output_dtype.
   """
-  images = tf.image.resize_bilinear(images, size, align_corners=True)
+  images = tf.image.resize(images, size, method=tf.image.ResizeMethod.BILINEAR)
   return tf.cast(images, dtype=output_dtype)
 
 
@@ -53,7 +53,7 @@ def scale_dimension(dim, scale):
     Scaled dimension.
   """
   if isinstance(dim, tf.Tensor):
-    return tf.cast((tf.to_float(dim) - 1.0) * scale + 1.0, dtype=tf.int32)
+    return tf.cast((tf.cast(dim, dtype=tf.float32) - 1.0) * scale + 1.0, dtype=tf.int32)
   else:
     return int((float(dim) - 1.0) * scale + 1.0)
 
@@ -93,7 +93,7 @@ def split_separable_conv2d(inputs,
       kernel_size=kernel_size,
       depth_multiplier=1,
       rate=rate,
-      weights_initializer=tf.truncated_normal_initializer(
+      weights_initializer=tf.compat.v1.truncated_normal_initializer(
           stddev=depthwise_weights_initializer_stddev),
       weights_regularizer=None,
       scope=scope + '_depthwise')
@@ -101,9 +101,9 @@ def split_separable_conv2d(inputs,
       outputs,
       filters,
       1,
-      weights_initializer=tf.truncated_normal_initializer(
+      weights_initializer=tf.compat.v1.truncated_normal_initializer(
           stddev=pointwise_weights_initializer_stddev),
-      weights_regularizer=slim.l2_regularizer(weight_decay),
+      weights_regularizer=tf.keras.regularizers.l2(0.5 * (weight_decay)),
       scope=scope + '_pointwise')
 
 
@@ -207,7 +207,7 @@ def get_batch_norm_params(decay=0.9997,
     if sync_batch_norm_method == 'None':
       # Slim-type gamma_initialier.
       batch_norm_params['param_initializers'] = {
-          'gamma': tf.zeros_initializer(),
+          'gamma': tf.compat.v1.zeros_initializer(),
       }
     else:
       raise ValueError('Unsupported sync_batch_norm_method.')

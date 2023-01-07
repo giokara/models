@@ -72,7 +72,7 @@ def save_image_array_as_png(image, output_path):
     output_path: path to which image should be written.
   """
   image_pil = Image.fromarray(np.uint8(image)).convert('RGB')
-  with tf.gfile.Open(output_path, 'w') as fid:
+  with tf.io.gfile.GFile(output_path, 'w') as fid:
     image_pil.save(fid, 'PNG')
 
 
@@ -378,7 +378,7 @@ def draw_bounding_boxes_on_image_tensors(images,
 
   def draw_boxes(image_and_detections):
     """Draws boxes on image."""
-    image_with_boxes = tf.py_func(visualize_boxes_fn, image_and_detections,
+    image_with_boxes = tf.compat.v1.py_func(visualize_boxes_fn, image_and_detections,
                                   tf.uint8)
     return image_with_boxes
 
@@ -700,8 +700,8 @@ def add_cdf_image_summary(values, name):
     image = np.fromstring(fig.canvas.tostring_rgb(), dtype='uint8').reshape(
         1, int(height), int(width), 3)
     return image
-  cdf_plot = tf.py_func(cdf_plot, [values], tf.uint8)
-  tf.summary.image(name, cdf_plot)
+  cdf_plot = tf.compat.v1.py_func(cdf_plot, [values], tf.uint8)
+  tf.compat.v1.summary.image(name, cdf_plot)
 
 
 def add_hist_image_summary(values, bins, name):
@@ -729,5 +729,5 @@ def add_hist_image_summary(values, bins, name):
         fig.canvas.tostring_rgb(), dtype='uint8').reshape(
             1, int(height), int(width), 3)
     return image
-  hist_plot = tf.py_func(hist_plot, [values, bins], tf.uint8)
-  tf.summary.image(name, hist_plot)
+  hist_plot = tf.compat.v1.py_func(hist_plot, [values, bins], tf.uint8)
+  tf.compat.v1.summary.image(name, hist_plot)

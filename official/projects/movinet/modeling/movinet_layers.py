@@ -218,15 +218,15 @@ class MobileConv2D(tf.keras.layers.Layer):
     """Calls the layer with the given inputs."""
     if self._use_temporal:
       input_shape = [
-          tf.shape(inputs)[0],
-          tf.shape(inputs)[1],
-          tf.shape(inputs)[2] * tf.shape(inputs)[3],
+          tf.shape(input=inputs)[0],
+          tf.shape(input=inputs)[1],
+          tf.shape(input=inputs)[2] * tf.shape(input=inputs)[3],
           inputs.shape[4]]
     else:
       input_shape = [
-          tf.shape(inputs)[0] * tf.shape(inputs)[1],
-          tf.shape(inputs)[2],
-          tf.shape(inputs)[3],
+          tf.shape(input=inputs)[0] * tf.shape(input=inputs)[1],
+          tf.shape(input=inputs)[2],
+          tf.shape(input=inputs)[3],
           inputs.shape[4]]
     x = tf.reshape(inputs, input_shape)
 
@@ -238,17 +238,17 @@ class MobileConv2D(tf.keras.layers.Layer):
 
     if self._use_temporal:
       output_shape = [
-          tf.shape(x)[0],
-          tf.shape(x)[1],
-          tf.shape(inputs)[2],
-          tf.shape(inputs)[3],
+          tf.shape(input=x)[0],
+          tf.shape(input=x)[1],
+          tf.shape(input=inputs)[2],
+          tf.shape(input=inputs)[3],
           x.shape[3]]
     else:
       output_shape = [
-          tf.shape(inputs)[0],
-          tf.shape(inputs)[1],
-          tf.shape(x)[1],
-          tf.shape(x)[2],
+          tf.shape(input=inputs)[0],
+          tf.shape(input=inputs)[1],
+          tf.shape(input=x)[1],
+          tf.shape(input=x)[2],
           x.shape[3]]
     x = tf.reshape(x, output_shape)
 
@@ -526,7 +526,7 @@ class StreamBuffer(tf.keras.layers.Layer):
     # Output buffer shape:
     # [batch_size, buffer_size, input_height, input_width, num_channels]
     if buffer is None:
-      shape = tf.shape(inputs)
+      shape = tf.shape(input=inputs)
       buffer = tf.zeros(
           [shape[0], self._buffer_size, shape[2], shape[3], shape[4]],
           dtype=inputs.dtype)
@@ -812,7 +812,7 @@ class StreamSqueezeExcitation(tf.keras.layers.Layer):
           x_space, states=states, output_states=True)
 
       if not self._causal:
-        x = tf.tile(x, [1, tf.shape(inputs)[1], 1, 1, 1])
+        x = tf.tile(x, [1, tf.shape(input=inputs)[1], 1, 1, 1])
 
       x = tf.concat([x, x_space], axis=-1)
     else:
@@ -1013,15 +1013,15 @@ class SkipBlock(tf.keras.layers.Layer):
     x = inputs
     if self._pool is not None:
       if self._conv_type == '2plus1d':
-        x = tf.reshape(x, [-1, tf.shape(x)[2], tf.shape(x)[3], x.shape[4]])
+        x = tf.reshape(x, [-1, tf.shape(input=x)[2], tf.shape(input=x)[3], x.shape[4]])
 
       x = self._pool(x)
 
       if self._conv_type == '2plus1d':
         x = tf.reshape(
             x,
-            [tf.shape(inputs)[0], -1, tf.shape(x)[1],
-             tf.shape(x)[2], x.shape[3]])
+            [tf.shape(input=inputs)[0], -1, tf.shape(input=x)[1],
+             tf.shape(input=x)[2], x.shape[3]])
     return self._projection(x)
 
 
@@ -1525,7 +1525,7 @@ class ClassifierHead(tf.keras.layers.Layer):
     self._classifier = ConvBlock(
         filters=num_classes,
         kernel_size=1,
-        kernel_initializer=tf.keras.initializers.random_normal(stddev=0.01),
+        kernel_initializer=tf.compat.v1.keras.initializers.random_normal(stddev=0.01),
         kernel_regularizer=None,
         use_bias=True,
         use_batch_norm=False,

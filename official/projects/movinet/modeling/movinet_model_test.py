@@ -60,7 +60,7 @@ class MovinetModelTest(parameterized.TestCase, tf.test.TestCase):
 
     inputs = tf.ones([1, 8, 172, 172, 3])
 
-    init_states = model.init_states(tf.shape(inputs))
+    init_states = model.init_states(tf.shape(input=inputs))
     expected, _ = model({**init_states, 'image': inputs})
 
     frames = tf.split(inputs, inputs.shape[1], axis=1)
@@ -88,7 +88,7 @@ class MovinetModelTest(parameterized.TestCase, tf.test.TestCase):
 
     inputs = tf.ones([1, 8, 172, 172, 3])
 
-    init_states = model.init_states(tf.shape(inputs))
+    init_states = model.init_states(tf.shape(input=inputs))
     expected, _ = model({**init_states, 'image': inputs})
 
     frames = tf.split(inputs, inputs.shape[1], axis=1)
@@ -117,7 +117,7 @@ class MovinetModelTest(parameterized.TestCase, tf.test.TestCase):
 
     inputs = tf.ones([1, 8, 172, 172, 3])
 
-    init_states = model.init_states(tf.shape(inputs))
+    init_states = model.init_states(tf.shape(input=inputs))
     expected, _ = model({**init_states, 'image': inputs})
 
     frames = tf.split(inputs, inputs.shape[1], axis=1)
@@ -148,7 +148,7 @@ class MovinetModelTest(parameterized.TestCase, tf.test.TestCase):
 
     inputs = tf.ones([1, 8, 172, 172, 3])
 
-    init_states = model.init_states(tf.shape(inputs))
+    init_states = model.init_states(tf.shape(input=inputs))
     expected, _ = model({**init_states, 'image': inputs})
 
     frames = tf.split(inputs, inputs.shape[1], axis=1)
@@ -184,7 +184,7 @@ class MovinetModelTest(parameterized.TestCase, tf.test.TestCase):
     model.build([1, 5, 172, 172, 3])
     model.compile(metrics=['acc'])
 
-    tf.keras.models.save_model(model, '/tmp/movinet/')
+    tf.keras.models.save_model(model, '/tmp/movinet/', save_format='h5')
     loaded_model = tf.keras.models.load_model('/tmp/movinet/')
 
     output = loaded_model(dict(image=tf.ones([1, 1, 1, 1, 3])))
@@ -245,7 +245,7 @@ class MovinetModelTest(parameterized.TestCase, tf.test.TestCase):
           weight = var_3d_2plus1d[:, 0]
         if weight.shape[-1] != var_2plus1d.shape[-1]:
           # Transpose any depthwise kernels (conv3d --> depthwise_conv2d)
-          weight = tf.transpose(weight, perm=(0, 1, 3, 2))
+          weight = tf.transpose(a=weight, perm=(0, 1, 3, 2))
         weights.append(weight)
     model_2plus1d.set_weights(weights)
 

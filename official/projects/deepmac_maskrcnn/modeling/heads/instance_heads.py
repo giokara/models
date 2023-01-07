@@ -103,20 +103,20 @@ class DeepMaskHead(tf.keras.layers.Layer):
     }
     if self._config_dict['use_separable_conv']:
       conv_kwargs.update({
-          'depthwise_initializer': tf.keras.initializers.VarianceScaling(
+          'depthwise_initializer': tf.compat.v1.keras.initializers.VarianceScaling(
               scale=2, mode='fan_out', distribution='untruncated_normal'),
-          'pointwise_initializer': tf.keras.initializers.VarianceScaling(
+          'pointwise_initializer': tf.compat.v1.keras.initializers.VarianceScaling(
               scale=2, mode='fan_out', distribution='untruncated_normal'),
-          'bias_initializer': tf.zeros_initializer(),
+          'bias_initializer': tf.compat.v1.zeros_initializer(),
           'depthwise_regularizer': self._config_dict['kernel_regularizer'],
           'pointwise_regularizer': self._config_dict['kernel_regularizer'],
           'bias_regularizer': self._config_dict['bias_regularizer'],
       })
     else:
       conv_kwargs.update({
-          'kernel_initializer': tf.keras.initializers.VarianceScaling(
+          'kernel_initializer': tf.compat.v1.keras.initializers.VarianceScaling(
               scale=2, mode='fan_out', distribution='untruncated_normal'),
-          'bias_initializer': tf.zeros_initializer(),
+          'bias_initializer': tf.compat.v1.zeros_initializer(),
           'kernel_regularizer': self._config_dict['kernel_regularizer'],
           'bias_regularizer': self._config_dict['bias_regularizer'],
       })
@@ -148,9 +148,9 @@ class DeepMaskHead(tf.keras.layers.Layer):
         kernel_size=self._config_dict['upsample_factor'],
         strides=self._config_dict['upsample_factor'],
         padding='valid',
-        kernel_initializer=tf.keras.initializers.VarianceScaling(
+        kernel_initializer=tf.compat.v1.keras.initializers.VarianceScaling(
             scale=2, mode='fan_out', distribution='untruncated_normal'),
-        bias_initializer=tf.zeros_initializer(),
+        bias_initializer=tf.compat.v1.zeros_initializer(),
         kernel_regularizer=self._config_dict['kernel_regularizer'],
         bias_regularizer=self._config_dict['bias_regularizer'],
         name='mask-upsampling')
@@ -170,20 +170,20 @@ class DeepMaskHead(tf.keras.layers.Layer):
     }
     if self._config_dict['use_separable_conv']:
       conv_kwargs.update({
-          'depthwise_initializer': tf.keras.initializers.VarianceScaling(
+          'depthwise_initializer': tf.compat.v1.keras.initializers.VarianceScaling(
               scale=2, mode='fan_out', distribution='untruncated_normal'),
-          'pointwise_initializer': tf.keras.initializers.VarianceScaling(
+          'pointwise_initializer': tf.compat.v1.keras.initializers.VarianceScaling(
               scale=2, mode='fan_out', distribution='untruncated_normal'),
-          'bias_initializer': tf.zeros_initializer(),
+          'bias_initializer': tf.compat.v1.zeros_initializer(),
           'depthwise_regularizer': self._config_dict['kernel_regularizer'],
           'pointwise_regularizer': self._config_dict['kernel_regularizer'],
           'bias_regularizer': self._config_dict['bias_regularizer'],
       })
     else:
       conv_kwargs.update({
-          'kernel_initializer': tf.keras.initializers.VarianceScaling(
+          'kernel_initializer': tf.compat.v1.keras.initializers.VarianceScaling(
               scale=2, mode='fan_out', distribution='untruncated_normal'),
-          'bias_initializer': tf.zeros_initializer(),
+          'bias_initializer': tf.compat.v1.zeros_initializer(),
           'kernel_regularizer': self._config_dict['kernel_regularizer'],
           'bias_regularizer': self._config_dict['bias_regularizer'],
       })
@@ -208,12 +208,12 @@ class DeepMaskHead(tf.keras.layers.Layer):
          roi_width * upsample_factor], representing the mask predictions.
     """
     roi_features, roi_classes = inputs
-    features_shape = tf.shape(roi_features)
+    features_shape = tf.shape(input=roi_features)
     batch_size, num_rois, height, width, filters = (
         features_shape[0], features_shape[1], features_shape[2],
         features_shape[3], features_shape[4])
     if batch_size is None:
-      batch_size = tf.shape(roi_features)[0]
+      batch_size = tf.shape(input=roi_features)[0]
 
     x = tf.reshape(roi_features, [-1, height, width, filters])
 
@@ -250,7 +250,7 @@ class DeepMaskHead(tf.keras.layers.Layer):
         [batch_indices, mask_indices, class_gather_indices],
         axis=2)
     mask_outputs = tf.gather_nd(
-        tf.transpose(logits, [0, 1, 4, 2, 3]), gather_indices)
+        tf.transpose(a=logits, perm=[0, 1, 4, 2, 3]), gather_indices)
     return mask_outputs
 
   def _build_convnet_variant(self):

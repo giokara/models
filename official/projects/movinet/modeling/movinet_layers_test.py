@@ -145,7 +145,7 @@ class MovinetLayersTest(parameterized.TestCase, tf.test.TestCase):
     inputs = tf.ones([1, 2, 2, 1, 3])
 
     paddings = [[0, 0], [2, 0], [0, 0], [0, 0], [0, 0]]
-    padded_inputs = tf.pad(inputs, paddings)
+    padded_inputs = tf.pad(tensor=inputs, paddings=paddings)
     predicted = conv2d(padded_inputs)
 
     expected = tf.constant(

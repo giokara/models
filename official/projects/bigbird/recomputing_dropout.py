@@ -49,7 +49,7 @@ def smart_cond(pred, true_fn=None, false_fn=None, name=None):
   pred_value = tf.get_static_value(pred)
   if isinstance(pred, tf.Variable) or pred_value is None:
     return tf.cond(
-        pred, true_fn=true_fn, false_fn=false_fn, name=name)
+        pred=pred, true_fn=true_fn, false_fn=false_fn, name=name)
   if pred_value:
     return true_fn()
   else:
@@ -99,11 +99,11 @@ class RecomputingDropout(tf.keras.layers.Layer):
     if self.noise_shape is None:
       return None
 
-    concrete_inputs_shape = tf.shape(inputs)
+    concrete_inputs_shape = tf.shape(input=inputs)
     noise_shape = []
     for i, value in enumerate(self.noise_shape):
       noise_shape.append(concrete_inputs_shape[i] if value is None else value)
-    return tf.convert_to_tensor(noise_shape)
+    return tf.convert_to_tensor(value=noise_shape)
 
   def call(self, inputs, training=None):
     """Builds computation graph.

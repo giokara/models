@@ -100,7 +100,7 @@ class BigBirdEncoder(tf.keras.Model):
                activation=activations.gelu,
                dropout_rate=0.1,
                attention_dropout_rate=0.1,
-               initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02),
+               initializer=tf.compat.v1.keras.initializers.TruncatedNormal(stddev=0.02),
                embedding_width=None,
                use_gradient_checkpointing=False,
                **kwargs):

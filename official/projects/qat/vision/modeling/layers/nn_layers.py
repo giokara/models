@@ -195,7 +195,7 @@ class SqueezeExcitationQuantized(
     return dict(list(base_config.items()) + list(config.items()))
 
   def call(self, inputs, training=None):
-    x = tf.reduce_mean(inputs, self._spatial_axis, keepdims=True)
+    x = tf.reduce_mean(input_tensor=inputs, axis=self._spatial_axis, keepdims=True)
     x = self._reduce_mean_quantizer(
         x, training, self._reduce_mean_quantizer_vars)
     x = self._activation_layer(self._se_reduce(x))
@@ -313,7 +313,7 @@ class SegmentationHeadQuantized(tf.keras.layers.Layer):
     # fusion type is `deeplabv3plus`.
     backbone_shape = input_shape[0]
     use_depthwise_convolution = self._config_dict['use_depthwise_convolution']
-    random_initializer = tf.keras.initializers.RandomNormal(stddev=0.01)
+    random_initializer = tf.compat.v1.keras.initializers.RandomNormal(stddev=0.01)
     conv_kwargs = {
         'kernel_size': 3 if not use_depthwise_convolution else 1,
         'padding': 'same',
@@ -387,7 +387,7 @@ class SegmentationHeadQuantized(tf.keras.layers.Layer):
         filters=self._config_dict['num_classes'],
         kernel_size=self._config_dict['prediction_kernel_size'],
         padding='same',
-        bias_initializer=tf.zeros_initializer(),
+        bias_initializer=tf.compat.v1.zeros_initializer(),
         kernel_initializer=tf_utils.clone_initializer(random_initializer),
         kernel_regularizer=self._config_dict['kernel_regularizer'],
         bias_regularizer=self._config_dict['bias_regularizer'],
@@ -787,8 +787,8 @@ class BatchNormalizationWrapper(tf.keras.layers.Wrapper):
   """
 
   def call(self, inputs: tf.Tensor, *args: Any, **kwargs: Any) -> tf.Tensor:
-    channels = tf.shape(inputs)[-1]
+    channels = tf.shape(input=inputs)[-1]
     x = tf.nn.depthwise_conv2d(
-        inputs, tf.ones([1, 1, channels, 1]), [1, 1, 1, 1], 'VALID')
+        input=inputs, filter=tf.ones([1, 1, channels, 1]), strides=[1, 1, 1, 1], padding='VALID')
     outputs = self.layer.call(x, *args, **kwargs)
     return outputs

@@ -36,11 +36,11 @@ def log_sum_exp(x_k):
   Returns:
     log_sum_exp of the arguments.
   """
-  m = tf.reduce_max(x_k)
+  m = tf.reduce_max(input_tensor=x_k)
   x1_k = x_k - m
   u_k = tf.exp(x1_k)
-  z = tf.reduce_sum(u_k)
-  return tf.log(z) + m
+  z = tf.reduce_sum(input_tensor=u_k)
+  return tf.math.log(z) + m
 
 
 def linear(x, out_size, do_bias=True, alpha=1.0, identity_if_possible=False,
@@ -66,7 +66,7 @@ def linear(x, out_size, do_bias=True, alpha=1.0, identity_if_possible=False,
   """
   in_size = int(x.get_shape()[1]) # from Dimension(10) -> 10
   stddev = alpha/np.sqrt(float(in_size))
-  mat_init = tf.random_normal_initializer(0.0, stddev)
+  mat_init = tf.compat.v1.random_normal_initializer(0.0, stddev)
   wname = (name + "/W") if name else "/W"
 
   if identity_if_possible and in_size == out_size:
@@ -117,7 +117,7 @@ def init_linear(in_size, out_size, do_bias=True, mat_init_value=None,
 
   if mat_init_value is None:
     stddev = alpha/np.sqrt(float(in_size))
-    mat_init = tf.random_normal_initializer(0.0, stddev)
+    mat_init = tf.compat.v1.random_normal_initializer(0.0, stddev)
 
   wname = (name + "/W") if name else "/W"
 
@@ -128,35 +128,35 @@ def init_linear(in_size, out_size, do_bias=True, mat_init_value=None,
   # Note the use of get_variable vs. tf.Variable.  this is because get_variable
   # does not allow the initialization of the variable with a value.
   if normalized:
-    w_collections = [tf.GraphKeys.GLOBAL_VARIABLES, "norm-variables"]
+    w_collections = [tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, "norm-variables"]
     if collections:
       w_collections += collections
     if mat_init_value is not None:
       w = tf.Variable(mat_init_value, name=wname, collections=w_collections,
                       trainable=trainable)
     else:
-      w = tf.get_variable(wname, [in_size, out_size], initializer=mat_init,
+      w = tf.compat.v1.get_variable(wname, [in_size, out_size], initializer=mat_init,
                           collections=w_collections, trainable=trainable)
-    w = tf.nn.l2_normalize(w, dim=0) # x W, so xW_j = \sum_i x_bi W_ij
+    w = tf.nn.l2_normalize(w, axis=0) # x W, so xW_j = \sum_i x_bi W_ij
   else:
-    w_collections = [tf.GraphKeys.GLOBAL_VARIABLES]
+    w_collections = [tf.compat.v1.GraphKeys.GLOBAL_VARIABLES]
     if collections:
       w_collections += collections
     if mat_init_value is not None:
       w = tf.Variable(mat_init_value, name=wname, collections=w_collections,
                       trainable=trainable)
     else:
-      w = tf.get_variable(wname, [in_size, out_size], initializer=mat_init,
+      w = tf.compat.v1.get_variable(wname, [in_size, out_size], initializer=mat_init,
                           collections=w_collections, trainable=trainable)
   b = None
   if do_bias:
-    b_collections = [tf.GraphKeys.GLOBAL_VARIABLES]
+    b_collections = [tf.compat.v1.GraphKeys.GLOBAL_VARIABLES]
     if collections:
       b_collections += collections
     bname = (name + "/b") if name else "/b"
     if bias_init_value is None:
-      b = tf.get_variable(bname, [1, out_size],
-                          initializer=tf.zeros_initializer(),
+      b = tf.compat.v1.get_variable(bname, [1, out_size],
+                          initializer=tf.compat.v1.zeros_initializer(),
                           collections=b_collections,
                           trainable=trainable)
     else:

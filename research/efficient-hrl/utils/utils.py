@@ -119,7 +119,7 @@ def get_all_vars(ignore_scopes=None):
   Returns:
     A list of all tf variables in scope.
   """
-  all_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+  all_vars = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES)
   all_vars = [var for var in all_vars if ignore_scopes is None or not
               any(var.name.startswith(scope) for scope in ignore_scopes)]
   return all_vars
@@ -272,14 +272,14 @@ def tf_print(op,
         log_message = "%s, %s" % (message, sub_message)
         if include_count:
           log_message += ", count=%d" % _tf_print_counts[name]
-        tf.logging.info("[%s]: %s" % (log_message, x))
+        tf.compat.v1.logging.info("[%s]: %s" % (log_message, x))
       if print_freq > 0:
         for i, x in enumerate(xs):
           _tf_print_running_sums[name][i] = 0
         _tf_print_running_counts[name] = 0
     return xs[0]
 
-  print_op = tf.py_func(print_message, tensors, tensors[0].dtype)
+  print_op = tf.compat.v1.py_func(print_message, tensors, tensors[0].dtype)
   with tf.control_dependencies([print_op]):
     op = tf.identity(op)
   return op
@@ -297,21 +297,21 @@ def _periodically(body, period, name='periodically'):
   if period == 1:
     return body()
 
-  with tf.variable_scope(None, default_name=name):
-    counter = tf.get_variable(
+  with tf.compat.v1.variable_scope(None, default_name=name):
+    counter = tf.compat.v1.get_variable(
         "counter",
         shape=[],
         dtype=tf.int64,
         trainable=False,
-        initializer=tf.constant_initializer(period, dtype=tf.int64))
+        initializer=tf.compat.v1.constant_initializer(period, dtype=tf.int64))
 
     def _wrapped_body():
       with tf.control_dependencies([body()]):
         return counter.assign(1)
 
     update = tf.cond(
-        tf.equal(counter, period), _wrapped_body,
-        lambda: counter.assign_add(1))
+        pred=tf.equal(counter, period), true_fn=_wrapped_body,
+        false_fn=lambda: counter.assign_add(1))
 
   return update
 

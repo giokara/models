@@ -84,7 +84,7 @@ class DetectionExportTest(tf.test.TestCase, parameterized.TestCase):
             os.path.join(tmp_dir, 'variables',
                          'variables.data-00000-of-00001')))
 
-    imported = tf.saved_model.load(tmp_dir)
+    imported = tf.compat.v1.saved_model.load(tmp_dir)
     detection_fn = imported.signatures['serving_default']
 
     images = self._get_dummy_input(
@@ -128,7 +128,7 @@ class DetectionExportTest(tf.test.TestCase, parameterized.TestCase):
             os.path.join(tmp_dir, 'variables',
                          'variables.data-00000-of-00001')))
 
-    imported = tf.saved_model.load(tmp_dir)
+    imported = tf.compat.v1.saved_model.load(tmp_dir)
     detection_fn = imported.signatures['serving_default']
 
     images = self._get_dummy_input(

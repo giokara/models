@@ -75,7 +75,7 @@ def _build_pretrainer(
       candidate_size=config.candidate_size,
       mlm_activation=tf_utils.get_activation(
           generator_encoder_cfg.hidden_activation),
-      mlm_initializer=tf.keras.initializers.TruncatedNormal(
+      mlm_initializer=tf.compat.v1.keras.initializers.TruncatedNormal(
           stddev=generator_encoder_cfg.initializer_range))
 
 
@@ -91,7 +91,7 @@ class TeamsPretrainTask(base_task.Task):
                    model_outputs,
                    metrics,
                    aux_losses=None) -> tf.Tensor:
-    with tf.name_scope('TeamsPretrainTask/losses'):
+    with tf.compat.v1.name_scope('TeamsPretrainTask/losses'):
       metrics = dict([(metric.name, metric) for metric in metrics])
 
       # Generator MLM loss.
@@ -100,8 +100,8 @@ class TeamsPretrainTask(base_task.Task):
           tf.cast(model_outputs['lm_outputs'], tf.float32),
           from_logits=True)
       lm_label_weights = labels['masked_lm_weights']
-      lm_numerator_loss = tf.reduce_sum(lm_prediction_losses * lm_label_weights)
-      lm_denominator_loss = tf.reduce_sum(lm_label_weights)
+      lm_numerator_loss = tf.reduce_sum(input_tensor=lm_prediction_losses * lm_label_weights)
+      lm_denominator_loss = tf.reduce_sum(input_tensor=lm_label_weights)
       mlm_loss = tf.math.divide_no_nan(lm_numerator_loss, lm_denominator_loss)
       metrics['masked_lm_loss'].update_state(mlm_loss)
       weight = self.task_config.model.generator_loss_weight
@@ -113,8 +113,8 @@ class TeamsPretrainTask(base_task.Task):
       input_mask = tf.cast(labels['input_mask'], tf.float32)
       rtd_ind_loss = tf.nn.sigmoid_cross_entropy_with_logits(
           logits=rtd_logits, labels=rtd_labels)
-      rtd_numerator = tf.reduce_sum(input_mask * rtd_ind_loss)
-      rtd_denominator = tf.reduce_sum(input_mask)
+      rtd_numerator = tf.reduce_sum(input_tensor=input_mask * rtd_ind_loss)
+      rtd_denominator = tf.reduce_sum(input_tensor=input_mask)
       rtd_loss = tf.math.divide_no_nan(rtd_numerator, rtd_denominator)
       metrics['replaced_token_detection_loss'].update_state(rtd_loss)
       weight = self.task_config.model.discriminator_rtd_loss_weight
@@ -125,8 +125,8 @@ class TeamsPretrainTask(base_task.Task):
       mws_labels = model_outputs['disc_mws_label']
       mws_loss = tf.keras.losses.sparse_categorical_crossentropy(
           mws_labels, mws_logits, from_logits=True)
-      mws_numerator_loss = tf.reduce_sum(mws_loss * lm_label_weights)
-      mws_denominator_loss = tf.reduce_sum(lm_label_weights)
+      mws_numerator_loss = tf.reduce_sum(input_tensor=mws_loss * lm_label_weights)
+      mws_denominator_loss = tf.reduce_sum(input_tensor=lm_label_weights)
       mws_loss = tf.math.divide_no_nan(mws_numerator_loss, mws_denominator_loss)
       metrics['multiword_selection_loss'].update_state(mws_loss)
       weight = self.task_config.model.discriminator_mws_loss_weight
@@ -178,7 +178,7 @@ class TeamsPretrainTask(base_task.Task):
     return metrics
 
   def process_metrics(self, metrics, labels, model_outputs):
-    with tf.name_scope('TeamsPretrainTask/process_metrics'):
+    with tf.compat.v1.name_scope('TeamsPretrainTask/process_metrics'):
       metrics = dict([(metric.name, metric) for metric in metrics])
       if 'masked_lm_accuracy' in metrics:
         metrics['masked_lm_accuracy'].update_state(labels['masked_lm_ids'],

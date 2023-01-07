@@ -186,10 +186,10 @@ def export_saved_model(
       signatures = predict_fn
 
     tf.keras.models.save_model(
-        model, export_path, signatures=signatures)
+        model, export_path, signatures=signatures, save_format='h5')
   else:
     _ = model(tf.ones(input_shape_concrete))
-    tf.keras.models.save_model(model, export_path)
+    tf.keras.models.save_model(model, export_path, save_format='h5')
 
 
 def build_and_export_saved_model(

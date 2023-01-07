@@ -309,7 +309,7 @@ def main(argv):
               debug=FLAGS.debug)
 
       # Write a scalar summary.
-      tf.summary.scalar('train_epoch_loss', loss, step=epoch)
+      tf.compat.v1.summary.scalar('train_epoch_loss', loss, step=epoch)
       # Forces summary writer to send any buffered data to storage.
       writer.flush()
 
@@ -331,7 +331,7 @@ def main(argv):
                 epoch=epoch, train=False, batch_size=FLAGS.batch_size,
                 query_size=FLAGS.query_size, neg_num=FLAGS.neg_num,
                 update_every=FLAGS.update_every, debug=FLAGS.debug)
-        tf.summary.scalar('val_epoch_loss', loss, step=epoch)
+        tf.compat.v1.summary.scalar('val_epoch_loss', loss, step=epoch)
         writer.flush()
 
       # Evaluate on test datasets every test_freq epochs.

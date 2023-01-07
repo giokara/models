@@ -49,7 +49,7 @@ class UtilsTest(tf.test.TestCase):
     # Make sure the values are the same before and after loading.
     self.assertAllEqual(np.array(img_out), img)
 
-    self.assertAllLessEqual(tf.shape(img), max_img_size)
+    self.assertAllLessEqual(tf.shape(input=img), max_img_size)
 
   def testDefaultLoaderWithBoundingBox(self):
     # Create a dummy image.
@@ -69,7 +69,7 @@ class UtilsTest(tf.test.TestCase):
         preprocess=False)
 
     # Check that the final shape is as expected.
-    self.assertAllEqual(tf.shape(img), [expected_size, expected_size, 3])
+    self.assertAllEqual(tf.shape(input=img), [expected_size, expected_size, 3])
 
 
 if __name__ == '__main__':

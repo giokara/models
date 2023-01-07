@@ -36,7 +36,7 @@ from utils import eval_utils
 from environments import create_maze_env
 # pylint: enable=unused-import
 
-flags = tf.app.flags
+flags = tf.compat.v1.app.flags
 
 flags.DEFINE_string('eval_dir', None,
                     'Directory for writing logs/summaries during eval.')
@@ -72,10 +72,10 @@ def get_evaluate_checkpoint_fn(master, output_dir, eval_step_fns,
   Returns:
     A function that evaluates a checkpoint.
   """
-  sess = tf.Session(master, graph=tf.get_default_graph())
-  sess.run(tf.global_variables_initializer())
-  sess.run(tf.local_variables_initializer())
-  summary_writer = tf.summary.FileWriter(output_dir)
+  sess = tf.compat.v1.Session(master, graph=tf.compat.v1.get_default_graph())
+  sess.run(tf.compat.v1.global_variables_initializer())
+  sess.run(tf.compat.v1.local_variables_initializer())
+  summary_writer = tf.compat.v1.summary.FileWriter(output_dir)
 
   def evaluate_checkpoint(checkpoint_path):
     """Performs a one-time evaluation of the given checkpoint.
@@ -102,7 +102,7 @@ def get_evaluate_checkpoint_fn(master, output_dir, eval_step_fns,
         env_base.set_sess(sess)  # set session
 
       if generate_summaries:
-        tf.logging.info(
+        tf.compat.v1.logging.info(
             '[%s] Computing average reward over %d episodes at global step %d.',
             eval_tag, num_episodes_eval, global_step)
         (average_reward, last_reward,
@@ -110,21 +110,21 @@ def get_evaluate_checkpoint_fn(master, output_dir, eval_step_fns,
          states, actions) = eval_utils.compute_average_reward(
              sess, env_base, eval_step, gamma, max_steps_per_episode,
              num_episodes_eval)
-        tf.logging.info('[%s] Average reward = %f', eval_tag, average_reward)
-        tf.logging.info('[%s] Last reward = %f', eval_tag, last_reward)
-        tf.logging.info('[%s] Average meta reward = %f', eval_tag, average_meta_reward)
-        tf.logging.info('[%s] Last meta reward = %f', eval_tag, last_meta_reward)
-        tf.logging.info('[%s] Average success = %f', eval_tag, average_success)
+        tf.compat.v1.logging.info('[%s] Average reward = %f', eval_tag, average_reward)
+        tf.compat.v1.logging.info('[%s] Last reward = %f', eval_tag, last_reward)
+        tf.compat.v1.logging.info('[%s] Average meta reward = %f', eval_tag, average_meta_reward)
+        tf.compat.v1.logging.info('[%s] Last meta reward = %f', eval_tag, last_meta_reward)
+        tf.compat.v1.logging.info('[%s] Average success = %f', eval_tag, average_success)
         if model_rollout_fn is not None:
           preds, model_losses = eval_utils.compute_model_loss(
               sess, model_rollout_fn, states, actions)
           for i, (pred, state, model_loss) in enumerate(
               zip(preds, states, model_losses)):
-            tf.logging.info('[%s] Model rollout step %d: loss=%f', eval_tag, i,
+            tf.compat.v1.logging.info('[%s] Model rollout step %d: loss=%f', eval_tag, i,
                             model_loss)
-            tf.logging.info('[%s] Model rollout step %d: pred=%s', eval_tag, i,
+            tf.compat.v1.logging.info('[%s] Model rollout step %d: pred=%s', eval_tag, i,
                             str(pred.tolist()))
-            tf.logging.info('[%s] Model rollout step %d: state=%s', eval_tag, i,
+            tf.compat.v1.logging.info('[%s] Model rollout step %d: state=%s', eval_tag, i,
                             str(state.tolist()))
 
         # Report the eval stats to the tuner.
@@ -138,8 +138,8 @@ def get_evaluate_checkpoint_fn(master, output_dir, eval_step_fns,
                              ('Reward/average_%s_meta_reward', average_meta_reward),
                              ('Reward/last_%s_meta_reward', last_meta_reward),
                              ('Reward/average_%s_success', average_success)]:
-          summary_str = tf.Summary(value=[
-              tf.Summary.Value(
+          summary_str = tf.compat.v1.Summary(value=[
+              tf.compat.v1.Summary.Value(
                   tag=tag % eval_tag,
                   simple_value=value)
           ])
@@ -150,7 +150,7 @@ def get_evaluate_checkpoint_fn(master, output_dir, eval_step_fns,
         # Do a manual reset before generating the video to see the initial
         # pose of the robot, towards which the reset controller is moving.
         if hasattr(env_base, '_gym_env'):
-          tf.logging.info('Resetting before recording video')
+          tf.compat.v1.logging.info('Resetting before recording video')
           if hasattr(env_base._gym_env, 'reset_model'):
             env_base._gym_env.reset_model()  # pylint: disable=protected-access
           else:
@@ -174,8 +174,8 @@ def get_model_rollout(uvf_agent, tf_env):
   """Model rollout function."""
   state_spec = tf_env.observation_spec()[0]
   action_spec = tf_env.action_spec()[0]
-  state_ph = tf.placeholder(dtype=state_spec.dtype, shape=state_spec.shape)
-  action_ph = tf.placeholder(dtype=action_spec.dtype, shape=action_spec.shape)
+  state_ph = tf.compat.v1.placeholder(dtype=state_spec.dtype, shape=state_spec.shape)
+  action_ph = tf.compat.v1.placeholder(dtype=action_spec.dtype, shape=action_spec.shape)
 
   merged_state = uvf_agent.merged_state(state_ph)
   diff_value = uvf_agent.critic_net(tf.expand_dims(merged_state, 0),
@@ -220,7 +220,7 @@ def get_eval_step(uvf_agent,
   state_repr = state_preprocess(state)
 
   action_spec = tf_env.action_spec()
-  action_ph = tf.placeholder(dtype=action_spec.dtype, shape=action_spec.shape)
+  action_ph = tf.compat.v1.placeholder(dtype=action_spec.dtype, shape=action_spec.shape)
   with tf.control_dependencies([state]):
     transition_type, reward, discount = tf_env.step(action_ph)
 
@@ -243,10 +243,10 @@ def get_eval_step(uvf_agent,
                                                transition_type,
                                                environment_steps, num_episodes)
 
-  increment_step_op = tf.cond(step_cond, increment_step, no_op_int)
+  increment_step_op = tf.cond(pred=step_cond, true_fn=increment_step, false_fn=no_op_int)
   with tf.control_dependencies([increment_step_op]):
-    increment_episode_op = tf.cond(reset_episode_cond, increment_episode,
-                                   no_op_int)
+    increment_episode_op = tf.cond(pred=reset_episode_cond, true_fn=increment_episode,
+                                   false_fn=no_op_int)
 
   with tf.control_dependencies([reward, discount]):
     next_state = tf_env.current_obs()
@@ -262,9 +262,9 @@ def get_eval_step(uvf_agent,
   # Important: do manual reset after getting the final reward from the
   # unreset environment.
   with tf.control_dependencies([post_reward, post_meta_reward]):
-    cond_reset_op = tf.cond(reset_env_cond,
-                            tf_env.reset,
-                            tf_env.current_time_step)
+    cond_reset_op = tf.cond(pred=reset_env_cond,
+                            true_fn=tf_env.reset,
+                            false_fn=tf_env.current_time_step)
 
   # Add a dummy control dependency to force the reset_op to run
   with tf.control_dependencies(cond_reset_op):
@@ -357,7 +357,7 @@ def evaluate(checkpoint_dir,
 
   if meta_agent_class is not None:
     assert agent_class.ACTION_TYPE == meta_agent_class.ACTION_TYPE
-    with tf.variable_scope('meta_agent'):
+    with tf.compat.v1.variable_scope('meta_agent'):
       meta_agent = meta_agent_class(
         observation_spec,
         action_spec,
@@ -366,7 +366,7 @@ def evaluate(checkpoint_dir,
   else:
     meta_agent = None
 
-  with tf.variable_scope('uvf_agent'):
+  with tf.compat.v1.variable_scope('uvf_agent'):
     uvf_agent = agent_class(
         observation_spec,
         action_spec,
@@ -374,7 +374,7 @@ def evaluate(checkpoint_dir,
     )
     uvf_agent.set_meta_agent(agent=meta_agent)
 
-  with tf.variable_scope('state_preprocess'):
+  with tf.compat.v1.variable_scope('state_preprocess'):
     state_preprocess = state_preprocess_class()
 
   # run both actor and critic once to ensure networks are initialized
@@ -416,13 +416,13 @@ def evaluate(checkpoint_dir,
   if eval_model_rollout:
     model_rollout_fn = get_model_rollout(uvf_agent, tf_env)
 
-  tf.train.get_or_create_global_step()
+  tf.compat.v1.train.get_or_create_global_step()
 
   if policy_save_dir:
     checkpoint_dir = os.path.join(checkpoint_dir, policy_save_dir)
 
-  tf.logging.info('Evaluating policies at %s', checkpoint_dir)
-  tf.logging.info('Running episodes for max %d steps', max_steps_per_episode)
+  tf.compat.v1.logging.info('Evaluating policies at %s', checkpoint_dir)
+  tf.compat.v1.logging.info('Running episodes for max %d steps', max_steps_per_episode)
 
   evaluate_checkpoint_fn = get_evaluate_checkpoint_fn(
       '', eval_dir, eval_step_fns, model_rollout_fn, gamma,
@@ -433,9 +433,9 @@ def evaluate(checkpoint_dir,
     checkpoint_path = os.path.join(checkpoint_dir, checkpoint_path)
     evaluate_checkpoint_fn(checkpoint_path)
   elif checkpoint_range is not None:
-    model_files = tf.gfile.Glob(
+    model_files = tf.io.gfile.glob(
         os.path.join(checkpoint_dir, 'model.ckpt-*.index'))
-    tf.logging.info('Found %s policies at %s', len(model_files), checkpoint_dir)
+    tf.compat.v1.logging.info('Found %s policies at %s', len(model_files), checkpoint_dir)
     model_files = {
         int(f.split('model.ckpt-', 1)[1].split('.', 1)[0]):
         os.path.splitext(f)[0]
@@ -446,7 +446,7 @@ def evaluate(checkpoint_dir,
         for k, v in model_files.items()
         if k >= checkpoint_range[0] and k <= checkpoint_range[1]
     }
-    tf.logging.info('Evaluating %d policies at %s',
+    tf.compat.v1.logging.info('Evaluating %d policies at %s',
                     len(model_files), checkpoint_dir)
     for _, checkpoint_path in sorted(model_files.items()):
       evaluate_checkpoint_fn(checkpoint_path)

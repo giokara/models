@@ -55,7 +55,7 @@ def _compute_loss_and_gradient(criterion, model, input, target, neg_num=5):
     positives = descriptors[target == 1]
     negatives = descriptors[target == 0]
 
-    negatives = tf.reshape(negatives, [tf.shape(queries)[0], neg_num,
+    negatives = tf.reshape(negatives, [tf.shape(input=queries)[0], neg_num,
                                        model.meta['outputdim']])
     # Loss calculation.
     loss = criterion(queries, positives, negatives)
@@ -168,7 +168,7 @@ def train_val_one_epoch(
       queries = descriptors[target == -1]
       positives = descriptors[target == 1]
       negatives = descriptors[target == 0]
-      negatives = tf.reshape(negatives, [tf.shape(queries)[0], neg_num,
+      negatives = tf.reshape(negatives, [tf.shape(input=queries)[0], neg_num,
                                          model.meta['outputdim']])
       loss = criterion(queries, positives, negatives)
 
@@ -286,9 +286,9 @@ def test_retrieval(datasets, net, epoch, writer=None, model_directory=None,
               net.meta['outputdim'],
               activation=None,
               use_bias=True,
-              kernel_initializer=tf.keras.initializers.Constant(
+              kernel_initializer=tf.compat.v1.keras.initializers.Constant(
                       projection_matrix.T),
-              bias_initializer=tf.keras.initializers.Constant(bias)
+              bias_initializer=tf.compat.v1.keras.initializers.Constant(bias)
       )
       with tf.io.gfile.GFile(filename_layer, 'wb') as learned_whitening_file:
         pickle.dump(whitening_layer.get_config(), learned_whitening_file)
@@ -375,8 +375,8 @@ def _calculate_metrics_and_export_to_tensorboard(vecs, qvecs, dataset, cfg,
       metric_names = ['test_accuracy_{}_E'.format(dataset),
                       'test_accuracy_{}_M'.format(dataset),
                       'test_accuracy_{}_H'.format(dataset)]
-    tf.summary.scalar(metric_names[0], metrics[0][0], step=epoch)
-    tf.summary.scalar(metric_names[1], metrics[1][0], step=epoch)
-    tf.summary.scalar(metric_names[2], metrics[2][0], step=epoch)
+    tf.compat.v1.summary.scalar(metric_names[0], metrics[0][0], step=epoch)
+    tf.compat.v1.summary.scalar(metric_names[1], metrics[1][0], step=epoch)
+    tf.compat.v1.summary.scalar(metric_names[2], metrics[2][0], step=epoch)
     writer.flush()
   return None

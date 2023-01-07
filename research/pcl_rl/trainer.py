@@ -237,7 +237,7 @@ class Trainer(object):
     if self.tau_decay is not None:
       assert self.tau_start >= self.tau
       tau = tf.maximum(
-          tf.train.exponential_decay(
+          tf.compat.v1.train.exponential_decay(
               self.tau_start, self.global_step, 100, self.tau_decay),
           self.tau)
 
@@ -373,15 +373,15 @@ class Trainer(object):
     if FLAGS.supervisor:
       with tf.device(tf.ReplicaDeviceSetter(FLAGS.ps_tasks, merge_devices=True)):
         self.global_step = tf.contrib.framework.get_or_create_global_step()
-        tf.set_random_seed(FLAGS.tf_seed)
+        tf.compat.v1.set_random_seed(FLAGS.tf_seed)
         self.controller = self.get_controller(self.env)
         self.model = self.controller.model
         self.controller.setup()
-        with tf.variable_scope(tf.get_variable_scope(), reuse=True):
+        with tf.compat.v1.variable_scope(tf.compat.v1.get_variable_scope(), reuse=True):
           self.eval_controller = self.get_controller(self.eval_env)
           self.eval_controller.setup(train=False)
 
-        saver = tf.train.Saver(max_to_keep=10)
+        saver = tf.compat.v1.train.Saver(max_to_keep=10)
         step = self.model.global_step
         sv = tf.Supervisor(logdir=FLAGS.save_dir,
                            is_chief=is_chief,
@@ -393,18 +393,18 @@ class Trainer(object):
                            init_fn=lambda sess: init_fn(sess, saver))
         sess = sv.PrepareSession(FLAGS.master)
     else:
-      tf.set_random_seed(FLAGS.tf_seed)
+      tf.compat.v1.set_random_seed(FLAGS.tf_seed)
       self.global_step = tf.contrib.framework.get_or_create_global_step()
       self.controller = self.get_controller(self.env)
       self.model = self.controller.model
       self.controller.setup()
-      with tf.variable_scope(tf.get_variable_scope(), reuse=True):
+      with tf.compat.v1.variable_scope(tf.compat.v1.get_variable_scope(), reuse=True):
         self.eval_controller = self.get_controller(self.eval_env)
         self.eval_controller.setup(train=False)
 
-      saver = tf.train.Saver(max_to_keep=10)
-      sess = tf.Session()
-      sess.run(tf.initialize_all_variables())
+      saver = tf.compat.v1.train.Saver(max_to_keep=10)
+      sess = tf.compat.v1.Session()
+      sess.run(tf.compat.v1.initialize_all_variables())
       init_fn(sess, saver)
 
     self.sv = sv
